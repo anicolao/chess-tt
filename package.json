@@ -5,7 +5,9 @@
   "main": "svelte.config.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test:unit": "echo 'No unit tests yet' && exit 0",
+    "test:e2e": "echo 'No e2e tests yet' && exit 0"
   },
   "keywords": [],
   "author": "",
