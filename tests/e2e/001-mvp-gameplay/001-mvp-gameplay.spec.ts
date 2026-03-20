@@ -16,9 +16,12 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
     description: 'Selecting a Pawn Highlights Legal Moves',
     verifications: [
       {
-        spec: 'The heading remains visible after selection',
+        spec: 'Four corner settings buttons frame the minimal board',
         check: async () => {
-          await expect(page.getByRole('heading', { name: /local play, touch-ready/i })).toBeVisible();
+          await expect(page.getByRole('button', { name: /Open top left settings/i })).toBeVisible();
+          await expect(page.getByRole('button', { name: /Open top right settings/i })).toBeVisible();
+          await expect(page.getByRole('button', { name: /Open bottom left settings/i })).toBeVisible();
+          await expect(page.getByRole('button', { name: /Open bottom right settings/i })).toBeVisible();
         }
       },
       {
@@ -44,6 +47,12 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
         spec: 'Black pieces are oriented toward the top player',
         check: async () => {
           await expect(page.locator('[data-square="d8"] [data-facing="top-player"]')).toBeVisible();
+        }
+      },
+      {
+        spec: 'The top clock remains visible above the board',
+        check: async () => {
+          await expect(page.getByLabel('black clock')).toContainText('Waiting');
         }
       }
     ]
