@@ -1,0 +1,17 @@
+{
+  "name": "chess-tt",
+  "version": "1.0.0",
+  "description": "A simple, touch-optimized chess game for large touchscreen tables. Built with SvelteKit and designed to be run as a PWA.",
+  "main": "svelte.config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}
