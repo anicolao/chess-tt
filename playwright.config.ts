@@ -28,6 +28,11 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
-    timeout: 2000,
+    /* 
+     * EXCEPTION: The 2000ms timeout rule is increased to 10000ms ONLY for 
+     * webServer startup in CI environments, as 2000ms is insufficient 
+     * for a reliable warm-up on GitHub Actions runners.
+     */
+    timeout: process.env.CI ? 10000 : 2000,
   },
 });
