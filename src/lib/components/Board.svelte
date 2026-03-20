@@ -20,29 +20,39 @@
 
 <style>
   .board-shell {
-    padding: 0.9rem;
-    border-radius: 1.5rem;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(8, 14, 21, 0.55));
+    /* Total vertical space reserved for shell padding, page padding, and corner gear clearance. */
+    --landscape-board-height-offset: 4.5rem;
+    /* Combined width reserved for both side clock rails, page padding, and inter-column gaps. */
+    --landscape-board-width-offset: 24rem;
+    padding: 0.85rem;
+    border-radius: 1.65rem;
+    background:
+      radial-gradient(circle at top, rgba(143, 188, 255, 0.14), transparent 42%),
+      linear-gradient(145deg, rgba(255, 255, 255, 0.09), rgba(8, 14, 21, 0.6));
     box-shadow:
-      0 1.2rem 2.6rem rgba(0, 0, 0, 0.34),
+      0 1.1rem 2.3rem rgba(0, 0, 0, 0.28),
       inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   }
 
   .board {
     display: grid;
     grid-template-columns: repeat(8, minmax(0, 1fr));
-    width: min(86vmin, 52rem);
+    width: min(100%, 86vmin, 52rem);
     border-radius: 1rem;
     overflow: hidden;
   }
 
   @media (orientation: landscape) {
     .board-shell {
-      padding: 0.75rem;
+      padding: 0.7rem;
     }
 
     .board {
-      width: min(70vw, calc(100vh - 10rem), 60rem);
+      width: min(
+        calc(100svh - var(--landscape-board-height-offset)),
+        calc(100vw - var(--landscape-board-width-offset)),
+        60rem
+      );
     }
   }
 </style>

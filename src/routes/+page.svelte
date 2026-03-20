@@ -58,13 +58,15 @@
 <svelte:window on:keydown={handleKeydown} />
 
 <div class="tabletop-app" data-app-ready={isHydrated}>
-  <GameInfo
-    color="black"
-    mirrored={true}
-    activeTurn={state.turn}
-    status={state.status}
-    winner={state.winner}
-  />
+  <div class="clock-slot clock-slot-black">
+    <GameInfo
+      color="black"
+      position="left"
+      activeTurn={state.turn}
+      status={state.status}
+      winner={state.winner}
+    />
+  </div>
 
   <main class="play-area">
     <div class="board-frame">
@@ -101,30 +103,42 @@
     </div>
   </main>
 
-  <GameInfo
-    color="white"
-    activeTurn={state.turn}
-    status={state.status}
-    winner={state.winner}
-  />
+  <div class="clock-slot clock-slot-white">
+    <GameInfo
+      color="white"
+      position="right"
+      activeTurn={state.turn}
+      status={state.status}
+      winner={state.winner}
+    />
+  </div>
 </div>
 
 <style>
   .tabletop-app {
     display: grid;
     gap: 0.7rem;
-    max-width: 84rem;
+    width: 100%;
+    max-width: 100rem;
     margin: 0 auto;
-    padding: 0.85rem;
-    min-height: 100vh;
+    padding: 0.75rem;
+    height: 100dvh;
     align-content: center;
+    overflow: hidden;
+    grid-template-rows: auto minmax(0, 1fr) auto;
   }
 
   .play-area {
     display: grid;
+    min-width: 0;
+    min-height: 0;
     justify-items: center;
     align-content: center;
     gap: 0.5rem;
+  }
+
+  .clock-slot {
+    min-width: 0;
   }
 
   .board-frame {
@@ -132,6 +146,9 @@
     display: grid;
     place-items: center;
     width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
     padding: 1.8rem;
   }
 
@@ -177,25 +194,41 @@
 
   @media (min-width: 900px) {
     .tabletop-app {
-      padding: 1rem 1.4rem;
-      grid-template-rows: auto 1fr auto;
+      padding: 0.8rem 1.2rem;
     }
   }
 
   @media (orientation: landscape) {
     .tabletop-app {
-      gap: 0.55rem;
-      max-width: 100rem;
-      padding: 0.6rem 1.25rem;
-      grid-template-rows: auto 1fr auto;
+      align-items: stretch;
+      gap: 1rem;
+      padding: 0.6rem 1rem;
+      grid-template-columns: minmax(8.5rem, 12rem) minmax(0, 1fr) minmax(8.5rem, 12rem);
+      grid-template-rows: minmax(0, 1fr);
+    }
+
+    .clock-slot {
+      display: grid;
+      min-height: 0;
+    }
+
+    .clock-slot-black {
+      grid-column: 1;
     }
 
     .play-area {
-      gap: 0.4rem;
+      grid-column: 2;
+      min-width: 0;
+      min-height: 0;
+      gap: 0;
+    }
+
+    .clock-slot-white {
+      grid-column: 3;
     }
 
     .board-frame {
-      padding: 1.4rem 1.8rem;
+      padding: 1.2rem 1.4rem;
     }
   }
 </style>
