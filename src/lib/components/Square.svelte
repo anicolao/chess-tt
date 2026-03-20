@@ -5,6 +5,7 @@
   export let ariaLabel;
   export let symbol;
   export let pieceLabel;
+  export let piece;
   export let isLight;
   export let isSelected;
   export let isHighlighted;
@@ -24,11 +25,11 @@
   data-square={square}
   onclick={() => onPress(square)}
 >
-  <span class="coordinate">{square}</span>
   {#if symbol}
     <Piece
       symbol={symbol}
       label={pieceLabel}
+      color={piece?.color ?? ''}
     />
   {/if}
   {#if isHighlighted}
@@ -80,18 +81,6 @@
 
   .last-move {
     background-image: linear-gradient(135deg, rgba(96, 244, 156, 0.3), rgba(96, 244, 156, 0));
-  }
-
-  .coordinate {
-    position: absolute;
-    top: 0.35rem;
-    left: 0.4rem;
-    font-size: 0.66rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    opacity: 0.72;
-    text-transform: uppercase;
-    pointer-events: none;
   }
 
   .highlight-marker {

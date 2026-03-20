@@ -77,7 +77,7 @@
   .tabletop-app {
     display: grid;
     gap: 1rem;
-    max-width: 72rem;
+    max-width: 84rem;
     margin: 0 auto;
     padding: 1rem;
     min-height: 100vh;
@@ -123,6 +123,27 @@
     .tabletop-app {
       padding: 1.5rem;
       grid-template-rows: auto 1fr auto;
+    }
+  }
+
+  @media (orientation: landscape) {
+    .tabletop-app {
+      gap: 0.8rem;
+      max-width: 100rem;
+      padding: 0.8rem 1.4rem;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .play-area {
+      gap: 0.8rem;
+    }
+
+    .board-frame {
+      gap: 0.8rem;
+    }
+
+    .title-block {
+      max-width: 48rem;
     }
   }
 </style>
