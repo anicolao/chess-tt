@@ -22,6 +22,12 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
         }
       },
       {
+        spec: 'Square coordinate labels are not rendered on the board',
+        check: async () => {
+          await expect(page.locator('.coordinate')).toHaveCount(0);
+        }
+      },
+      {
         spec: 'The selected square is marked as selected',
         check: async () => {
           await expect(page.locator('[data-square="e2"]')).toHaveClass(/selected/);
@@ -32,6 +38,12 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
         check: async () => {
           await expect(page.locator('[data-square="e3"]')).toHaveClass(/highlighted/);
           await expect(page.locator('[data-square="e4"]')).toHaveClass(/highlighted/);
+        }
+      },
+      {
+        spec: 'Black pieces are oriented toward the top player',
+        check: async () => {
+          await expect(page.locator('[data-square="d8"] [data-facing="top-player"]')).toBeVisible();
         }
       }
     ]

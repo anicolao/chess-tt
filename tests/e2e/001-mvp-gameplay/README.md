@@ -8,6 +8,8 @@ Verify that selecting a pawn highlights the legal destinations on the tabletop b
 
 ### Verifications
 - [x] The heading remains visible after selection
+- [x] Square coordinate labels are not rendered on the board
 - [x] The selected square is marked as selected
 - [x] The e3 and e4 targets are highlighted
+- [x] Black pieces are oriented toward the top player
 

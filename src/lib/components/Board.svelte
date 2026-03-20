@@ -31,8 +31,18 @@
   .board {
     display: grid;
     grid-template-columns: repeat(8, minmax(0, 1fr));
-    width: min(82vmin, 46rem);
+    width: min(86vmin, 52rem);
     border-radius: 1rem;
     overflow: hidden;
+  }
+
+  @media (orientation: landscape) {
+    .board-shell {
+      padding: 0.75rem;
+    }
+
+    .board {
+      width: min(70vw, calc(100vh - 10rem), 60rem);
+    }
   }
 </style>
