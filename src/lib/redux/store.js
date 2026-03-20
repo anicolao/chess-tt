@@ -22,7 +22,12 @@ function loadPersistedGameState() {
       return undefined;
     }
 
-    return { game: rebuildGameState(parsed.events) };
+    return {
+      game: rebuildGameState(parsed.events, {
+        timerSettings: parsed.timerSettings,
+        timerState: parsed.timerState
+      })
+    };
   } catch {
     return undefined;
   }
@@ -36,17 +41,19 @@ function persistGameState(gameState) {
   try {
     window.localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({
-        storageVersion,
-        events: gameState.events.map(({ type, from, to, color, promotion }) => ({
-          type,
-          from,
-          to,
-          color,
-          promotion
-        }))
-      })
-    );
+        JSON.stringify({
+          storageVersion,
+          events: gameState.events.map(({ type, from, to, color, promotion }) => ({
+            type,
+            from,
+            to,
+            color,
+            promotion
+          })),
+          timerSettings: gameState.timerSettings,
+          timerState: gameState.timerState
+        })
+      );
   } catch {
     // Ignore persistence failures so local play continues even when storage is unavailable.
   }

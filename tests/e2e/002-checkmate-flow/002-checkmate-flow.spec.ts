@@ -24,9 +24,9 @@ test('MVP move updates board state and controls', async ({ page }, testInfo) => 
         }
       },
       {
-        spec: 'The white clock flips to waiting after the move',
+        spec: 'The bottom seat clock flips to waiting after the move',
         check: async () => {
-          await expect(page.getByLabel('white clock')).toContainText('Waiting');
+          await expect(page.getByLabel('bottom seat clock')).toContainText('Waiting');
         }
       },
       {

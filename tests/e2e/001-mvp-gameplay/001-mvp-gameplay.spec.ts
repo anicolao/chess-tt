@@ -67,8 +67,8 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
         check: async () => {
           const layout = await page.evaluate(() => {
             const board = document.querySelector('[aria-label="Chess board"]')?.getBoundingClientRect();
-            const blackClock = document.querySelector('[aria-label="black clock"]')?.getBoundingClientRect();
-            const whiteClock = document.querySelector('[aria-label="white clock"]')?.getBoundingClientRect();
+            const blackClock = document.querySelector('[aria-label="top seat clock"]')?.getBoundingClientRect();
+            const whiteClock = document.querySelector('[aria-label="bottom seat clock"]')?.getBoundingClientRect();
 
             if (!board || !blackClock || !whiteClock) {
               return null;
