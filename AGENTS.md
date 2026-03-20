@@ -9,6 +9,7 @@ This document provides essential guidelines for AI agents working on the Chess T
 3.  **Redux & Event Sourcing**: All game and UI state must be managed via Redux. Game actions must be dispatched as events to a normalized state store.
 4.  **Zero-Pixel Tolerance**: We enforce a strict visual regression policy. Any UI change must be verified with visual snapshots.
 5.  **Design First**: Always ensure a design document (e.g., `MVP_DESIGN.md`) exists and is committed before starting implementation.
+6.  **Continuous Prompt Recording**: You MUST record ALL user prompts and instructions verbatim on the Pull Request. Initial prompts go in the description; subsequent prompts must be added as PR comments for every push.
 
 ## Project Structure
 

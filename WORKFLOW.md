@@ -15,7 +15,8 @@ All contributors (human and AI) must adhere to the following workflow when execu
 
 4. **Pull Requests**:
    - Create PRs using `gh pr create`.
-   - The PR description **must** include the **original User Prompt(s)** verbatim and any relevant user comments.
+   - The PR description **must** include the **original User Prompt(s)** verbatim and any relevant user comments that initiated the work.
+   - **Continuous Prompt Recording**: For every subsequent push to the PR, the agent MUST add a new comment to the PR containing the verbatim text of all new user prompts and instructions received since the last push. This ensures a complete, auditable history of the task's evolution.
 
 5. **Iterative Development**:
    - Commit often with descriptive messages.
