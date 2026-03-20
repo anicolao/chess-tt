@@ -29,7 +29,7 @@
     <Piece
       symbol={symbol}
       label={pieceLabel}
-      color={piece?.color ?? ''}
+      color={piece?.color}
     />
   {/if}
   {#if isHighlighted}
