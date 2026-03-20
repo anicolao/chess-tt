@@ -52,6 +52,7 @@ jobs:
           publish_dir: ./build
           destination_dir: ${{ steps.base_path.outputs.dir }}
           keep_files: true
+          create_branch: true
 
       - name: Comment PR with preview URL
         if: github.event_name == 'pull_request'
