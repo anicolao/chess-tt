@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { TestStepHelper } from '../helpers/test-step-helper';
+import { STORAGE_KEY } from '../../../src/lib/redux/persistence.js';
 
 test('Persisted checkmate state is restored on load', async ({ page }, testInfo) => {
   const tester = new TestStepHelper(page, testInfo);
@@ -9,16 +10,19 @@ test('Persisted checkmate state is restored on load', async ({ page }, testInfo)
   );
 
   await page.addInitScript((payload) => {
-    window.localStorage.setItem('chess-tt:mvp-state', JSON.stringify(payload));
+    window.localStorage.setItem(payload.key, JSON.stringify(payload.value));
   }, {
-    storageVersion: 1,
-    events: [
-      { type: 'game.started' },
-      { type: 'move.played', from: 'f2', to: 'f3', promotion: 'q' },
-      { type: 'move.played', from: 'e7', to: 'e5', promotion: 'q' },
-      { type: 'move.played', from: 'g2', to: 'g4', promotion: 'q' },
-      { type: 'move.played', from: 'd8', to: 'h4', promotion: 'q' }
-    ]
+    key: STORAGE_KEY,
+    value: {
+      storageVersion: 1,
+      events: [
+        { type: 'game.started' },
+        { type: 'move.played', from: 'f2', to: 'f3' },
+        { type: 'move.played', from: 'e7', to: 'e5' },
+        { type: 'move.played', from: 'g2', to: 'g4' },
+        { type: 'move.played', from: 'd8', to: 'h4' }
+      ]
+    }
   });
 
   await page.goto('/');

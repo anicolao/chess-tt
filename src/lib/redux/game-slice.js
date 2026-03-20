@@ -11,6 +11,20 @@ function createUiState() {
   };
 }
 
+function createMoveEvent(fen, from, to) {
+  const chess = createChess(fen);
+  const piece = chess.get(from);
+
+  if (!piece) {
+    return null;
+  }
+
+  const isPromotionMove = piece.type === 'p' && (to.endsWith('8') || to.endsWith('1'));
+  return isPromotionMove
+    ? { type: 'move.played', from, to, promotion: 'q' }
+    : { type: 'move.played', from, to };
+}
+
 function deriveCapturedPieces(history) {
   const captured = {
     white: [],
@@ -121,7 +135,7 @@ export function rebuildGameState(events = []) {
       const move = chess.move({
         from: event.from,
         to: event.to,
-        promotion: event.promotion ?? 'q'
+        promotion: event.promotion
       });
 
       if (!move) {
@@ -133,7 +147,7 @@ export function rebuildGameState(events = []) {
         from: move.from,
         to: move.to,
         san: move.san,
-        promotion: move.promotion ?? event.promotion ?? 'q'
+        ...(move.promotion ? { promotion: move.promotion } : {})
       });
       lastMove = {
         from: move.from,
@@ -213,6 +227,12 @@ function clearInteractionState(state) {
 }
 
 function createMoveState(state, from, to) {
+  const moveEvent = createMoveEvent(state.currentFen, from, to);
+
+  if (!moveEvent) {
+    return state;
+  }
+
   const next = rebuildGameState([
     ...state.events.map(({ type, from: eventFrom, to: eventTo, color, promotion }) => ({
       type,
@@ -221,7 +241,7 @@ function createMoveState(state, from, to) {
       color,
       promotion
     })),
-    { type: 'move.played', from, to, promotion: 'q' }
+    moveEvent
   ]);
 
   return next;
