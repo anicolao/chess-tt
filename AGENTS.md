@@ -10,6 +10,7 @@ This document provides essential guidelines for AI agents working on the Chess T
 4.  **Zero-Pixel Tolerance**: We enforce a strict visual regression policy. Any UI change must be verified with visual snapshots.
 5.  **Design First**: Always ensure a design document (e.g., `MVP_DESIGN.md`) exists and is committed before starting implementation.
 6.  **Continuous Prompt Recording**: You MUST record ALL user prompts and instructions verbatim on the Pull Request. Initial prompts go in the description; subsequent prompts must be added as PR comments for every push.
+7.  **Safe CLI Usage**: When passing multi-line strings or Markdown (especially those containing backticks) to CLI tools (e.g., `gh`), you MUST use temporary files or here-documents (`<<'EOF'`) to avoid shell quoting and escaping issues. Never attempt to pass large Markdown blocks as direct command-line arguments.
 
 ## Project Structure
 
