@@ -1,15 +1,16 @@
 <script>
   export let canUndo = false;
   export let canResign = true;
+  export let stacked = false;
   export let onNewGame = () => {};
   export let onUndo = () => {};
   export let onResign = () => {};
 </script>
 
-<section class="controls" aria-label="Game controls">
-  <button type="button" class="primary" onclick={onNewGame}>New Game</button>
-  <button type="button" disabled={!canUndo} onclick={onUndo}>Undo</button>
-  <button type="button" class="danger" disabled={!canResign} onclick={onResign}>Resign</button>
+<section class:stacked class="controls" aria-label="Game controls">
+  <button type="button" class="primary" on:click={onNewGame}>New Game</button>
+  <button type="button" disabled={!canUndo} on:click={onUndo}>Undo</button>
+  <button type="button" class="danger" disabled={!canResign} on:click={onResign}>Resign</button>
 </section>
 
 <style>
@@ -18,6 +19,10 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.75rem;
     width: 100%;
+  }
+
+  .controls.stacked {
+    grid-template-columns: 1fr;
   }
 
   button {

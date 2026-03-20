@@ -6,7 +6,7 @@ test('Persisted checkmate state is restored on load', async ({ page }, testInfo)
   const tester = new TestStepHelper(page, testInfo);
   tester.setMetadata(
     'Persisted Checkmate State',
-    'Verify that the event log in local storage restores a completed checkmate position after reload.'
+    'Verify that the event log in local storage restores a completed checkmate position after reload and exposes its controls through the settings panel.'
   );
 
   await page.addInitScript((payload) => {
@@ -27,14 +27,15 @@ test('Persisted checkmate state is restored on load', async ({ page }, testInfo)
 
   await page.goto('/');
   await expect(page.locator('[data-app-ready="true"]')).toBeVisible();
+  await page.getByRole('button', { name: /Open top left settings/i }).click();
 
   await tester.step('restored-checkmate', {
-    description: 'A Persisted Checkmate Position Restores Correctly',
+    description: 'A Persisted Checkmate Position and Settings View Restore Correctly',
     verifications: [
       {
         spec: 'The restored game shows the checkmate message',
         check: async () => {
-          await expect(page.getByLabel('white player information')).toContainText('Black wins by checkmate');
+          await expect(page.getByRole('dialog', { name: 'Game settings' })).toContainText('Black wins by checkmate');
         }
       },
       {
@@ -47,6 +48,12 @@ test('Persisted checkmate state is restored on load', async ({ page }, testInfo)
         spec: 'Resign is disabled because the game is complete',
         check: async () => {
           await expect(page.getByRole('button', { name: 'Resign' })).toBeDisabled();
+        }
+      },
+      {
+        spec: 'The settings panel faces the top edge when opened from the top-left corner',
+        check: async () => {
+          await expect(page.getByRole('dialog', { name: 'Game settings' })).toHaveAttribute('data-settings-corner', 'top-left');
         }
       }
     ]

@@ -12,6 +12,7 @@ test('MVP move updates board state and controls', async ({ page }, testInfo) => 
   await expect(page.locator('[data-app-ready="true"]')).toBeVisible();
   await page.getByRole('button', { name: /e2, White pawn/i }).click();
   await page.locator('[data-square="e4"]').click();
+  await page.getByRole('button', { name: /Open bottom right settings/i }).click();
 
   await tester.step('pawn-moved', {
     description: 'A Legal Move Updates the Game State',
@@ -23,14 +24,15 @@ test('MVP move updates board state and controls', async ({ page }, testInfo) => 
         }
       },
       {
-        spec: 'The white player panel shows black to move',
+        spec: 'The white clock flips to waiting after the move',
         check: async () => {
-          await expect(page.getByLabel('white player information')).toContainText('Black to move');
+          await expect(page.getByLabel('white clock')).toContainText('Waiting');
         }
       },
       {
-        spec: 'Undo becomes enabled after the move',
+        spec: 'Undo becomes enabled inside the settings dialog',
         check: async () => {
+          await expect(page.getByRole('dialog', { name: 'Game settings' })).toHaveAttribute('data-settings-corner', 'bottom-right');
           await expect(page.getByRole('button', { name: 'Undo' })).toBeEnabled();
         }
       }
