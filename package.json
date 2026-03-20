@@ -4,14 +4,14 @@
   "description": "A simple, touch-optimized chess game for large touchscreen tables. Built with SvelteKit and designed to be run as a PWA.",
   "main": "svelte.config.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm run test:unit",
     "prepare": "husky",
     "test:unit": "vitest run --passWithNoTests --exclude tests/e2e",
     "test:e2e": "playwright test",
-    "build": "mkdir -p build && echo '<html><body>Chess Tabletop MVP Scaffold</body></html>' > build/index.html && echo '<html><body>404</body></html>' > build/404.html",
-    "check": "echo 'No check needed yet'",
-    "dev": "npx http-server build -p 5173",
-    "preview": "echo 'No preview mode yet'"
+    "build": "vite build",
+    "check": "svelte-kit sync && echo \"No additional checks configured\"",
+    "dev": "vite dev --host 127.0.0.1 --port 5173",
+    "preview": "vite preview --host 127.0.0.1 --port 4173"
   },
   "keywords": [],
   "author": "",
@@ -19,8 +19,16 @@
   "type": "module",
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "http-server": "^14.1.1",
     "husky": "^9.1.7",
     "vitest": "^4.1.0"
+  },
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.11.2",
+    "@sveltejs/adapter-static": "^3.0.10",
+    "@sveltejs/kit": "^2.55.0",
+    "@sveltejs/vite-plugin-svelte": "^7.0.0",
+    "chess.js": "^1.4.0",
+    "svelte": "^5.54.0",
+    "vite": "^8.0.1"
   }
 }
