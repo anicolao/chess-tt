@@ -1,5 +1,5 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import '../app.css';
   import Board from '$lib/components/Board.svelte';
   import Controls from '$lib/components/Controls.svelte';
@@ -8,10 +8,15 @@
   import { appStore, gameActions, gameState } from '$lib/redux/store';
 
   const dispatch = (action) => appStore.dispatch(action);
-  let appReady = false;
+  // This flips after hydration so interaction tests can wait on a deterministic ready marker.
+  let isHydrated = false;
 
   onMount(() => {
-    appReady = true;
+    isHydrated = true;
+  });
+
+  onDestroy(() => {
+    isHydrated = false;
   });
 
   $: state = $gameState;
@@ -25,7 +30,7 @@
   <meta name="description" content="A touch-friendly local multiplayer chess board for tabletop play." />
 </svelte:head>
 
-<div class="tabletop-app" data-app-ready={appReady}>
+<div class="tabletop-app" data-app-ready={isHydrated}>
   <GameInfo
     color="black"
     mirrored={true}

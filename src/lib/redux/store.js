@@ -2,8 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { browser } from '$app/environment';
 import { readable } from 'svelte/store';
 import { gameActions, gameReducer, rebuildGameState, storageVersion } from '$lib/redux/game-slice';
-
-const STORAGE_KEY = 'chess-tt:mvp-state';
+import { STORAGE_KEY } from '$lib/redux/persistence';
 
 function loadPersistedGameState() {
   if (!browser) {
@@ -19,6 +18,7 @@ function loadPersistedGameState() {
 
     const parsed = JSON.parse(raw);
     if (parsed?.storageVersion !== storageVersion || !Array.isArray(parsed.events)) {
+      window.localStorage.removeItem(STORAGE_KEY);
       return undefined;
     }
 
@@ -33,19 +33,23 @@ function persistGameState(gameState) {
     return;
   }
 
-  window.localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({
-      storageVersion,
-      events: gameState.events.map(({ type, from, to, color, promotion }) => ({
-        type,
-        from,
-        to,
-        color,
-        promotion
-      }))
-    })
-  );
+  try {
+    window.localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        storageVersion,
+        events: gameState.events.map(({ type, from, to, color, promotion }) => ({
+          type,
+          from,
+          to,
+          color,
+          promotion
+        }))
+      })
+    );
+  } catch {
+    // Ignore persistence failures so local play continues even when storage is unavailable.
+  }
 }
 
 function createAppStore() {
@@ -67,9 +71,11 @@ function createAppStore() {
 
 export const appStore = createAppStore();
 export const gameState = readable(appStore.getState().game, (set) => {
-  set(appStore.getState().game);
+  const readGameState = () => appStore.getState().game;
+
+  set(readGameState());
   return appStore.subscribe(() => {
-    set(appStore.getState().game);
+    set(readGameState());
   });
 });
 
