@@ -1,5 +1,15 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { createChess, getTurnName, pieceSymbol } from '$lib/game/chess-game';
+import {
+  createInitialClockState,
+  createDefaultTimeSettings,
+  getColorForSeat,
+  getColorName,
+  getIncrementMs,
+  getSeatForColor,
+  normalizeClockState,
+  normalizeTimeSettings
+} from '$lib/game/time-controls';
 
 const STORAGE_VERSION = 1;
 
@@ -81,6 +91,10 @@ function buildMessage(chess, outcome) {
     return `${outcome.winner === 'white' ? 'White' : 'Black'} wins by checkmate`;
   }
 
+  if (outcome.status === 'timeout') {
+    return `${outcome.winner === 'white' ? 'White' : 'Black'} wins on time`;
+  }
+
   if (outcome.status === 'resigned') {
     return `${outcome.winner === 'white' ? 'White' : 'Black'} wins by resignation`;
   }
@@ -97,7 +111,168 @@ function buildMessage(chess, outcome) {
   return chess.inCheck() ? `${turnLabel} to move · Check` : `${turnLabel} to move`;
 }
 
-export function rebuildGameState(events = []) {
+function createTimeoutOutcome(timerSettings, expiredSeat) {
+  const winnerSeat = expiredSeat === 'top' ? 'bottom' : 'top';
+  const winnerColor = getColorForSeat(timerSettings.seatColors, winnerSeat);
+
+  return {
+    status: 'timeout',
+    winner: getColorName(winnerColor),
+    reason: 'time'
+  };
+}
+
+function synchronizeTimerState(timerState, timerSettings, turn, status, now) {
+  const normalizedTimerState = normalizeClockState(timerState, timerSettings, turn, status);
+
+  if (status !== 'active') {
+    return {
+      timerState: {
+        ...normalizedTimerState,
+        activeSeat: null,
+        lastUpdatedAt: null
+      },
+      expiredSeat: null
+    };
+  }
+
+  const activeSeat = normalizedTimerState.activeSeat ?? getSeatForColor(timerSettings.seatColors, turn);
+  if (!activeSeat) {
+    return {
+      timerState: {
+        ...normalizedTimerState,
+        activeSeat: null,
+        lastUpdatedAt: null
+      },
+      expiredSeat: null
+    };
+  }
+
+  const currentRemainingMs = normalizedTimerState.seats[activeSeat].remainingMs;
+  if (currentRemainingMs <= 0) {
+    return {
+      timerState: {
+        ...normalizedTimerState,
+        activeSeat: null,
+        lastUpdatedAt: null
+      },
+      expiredSeat: activeSeat
+    };
+  }
+
+  if (typeof now !== 'number') {
+    return {
+      timerState: {
+        ...normalizedTimerState,
+        activeSeat
+      },
+      expiredSeat: null
+    };
+  }
+
+  if (normalizedTimerState.lastUpdatedAt == null) {
+    return {
+      timerState: {
+        ...normalizedTimerState,
+        activeSeat,
+        lastUpdatedAt: now
+      },
+      expiredSeat: null
+    };
+  }
+
+  if (now < normalizedTimerState.lastUpdatedAt) {
+    return {
+      timerState: {
+        ...normalizedTimerState,
+        activeSeat,
+        // Preserve the remaining time and restart the running baseline from the new clock value.
+        lastUpdatedAt: now
+      },
+      expiredSeat: null
+    };
+  }
+
+  const elapsedMs = Math.max(0, now - normalizedTimerState.lastUpdatedAt);
+  const nextRemainingMs = Math.max(0, currentRemainingMs - elapsedMs);
+
+  return {
+    timerState: {
+      ...normalizedTimerState,
+      activeSeat: nextRemainingMs > 0 ? activeSeat : null,
+      lastUpdatedAt: nextRemainingMs > 0 ? now : null,
+      seats: {
+        ...normalizedTimerState.seats,
+        [activeSeat]: {
+          remainingMs: nextRemainingMs
+        }
+      }
+    },
+    expiredSeat: nextRemainingMs === 0 ? activeSeat : null
+  };
+}
+
+function applySynchronizedTimer(state, now) {
+  const timerSettings = normalizeTimeSettings(state.timerSettings);
+  const { timerState, expiredSeat } = synchronizeTimerState(
+    state.timerState,
+    timerSettings,
+    state.turn,
+    state.status,
+    now
+  );
+
+  if (!expiredSeat || state.status !== 'active') {
+    return {
+      ...state,
+      timerSettings,
+      timerState
+    };
+  }
+
+  const chess = createChess(state.currentFen);
+  const outcome = createTimeoutOutcome(timerSettings, expiredSeat);
+
+  return {
+    ...state,
+    timerSettings,
+    timerState,
+    status: outcome.status,
+    winner: outcome.winner,
+    reason: outcome.reason,
+    message: buildMessage(chess, outcome)
+  };
+}
+
+function advanceTimerAfterMove(timerState, timerSettings, movingColor, nextTurn, status, now) {
+  const movingSeat = getSeatForColor(timerSettings.seatColors, movingColor);
+  const nextActiveSeat = status === 'active' ? getSeatForColor(timerSettings.seatColors, nextTurn) : null;
+
+  if (!movingSeat) {
+    return normalizeClockState(timerState, timerSettings, nextTurn, status);
+  }
+
+  return {
+    ...normalizeClockState(timerState, timerSettings, nextTurn, status),
+    activeSeat: nextActiveSeat,
+    lastUpdatedAt: nextActiveSeat && typeof now === 'number' ? now : null,
+    seats: {
+      ...timerState.seats,
+      [movingSeat]: {
+        remainingMs: timerState.seats[movingSeat].remainingMs + getIncrementMs(timerSettings, movingSeat)
+      }
+    }
+  };
+}
+
+function clearUiState(state) {
+  return {
+    ...state,
+    ui: createUiState()
+  };
+}
+
+export function rebuildGameState(events = [], options = {}) {
   const sanitizedEvents = [];
   let chess = createChess();
   let outcome = {
@@ -188,7 +363,7 @@ export function rebuildGameState(events = []) {
     promotion: move.promotion ?? null
   }));
 
-  return {
+  const baseState = {
     storageVersion: STORAGE_VERSION,
     events: sanitizedEvents.map((event, index) => ({ ...event, id: index })),
     currentFen: chess.fen(),
@@ -202,6 +377,18 @@ export function rebuildGameState(events = []) {
     captured: deriveCapturedPieces(history),
     ui: createUiState()
   };
+
+  const timerSettings = normalizeTimeSettings(options.timerSettings ?? createDefaultTimeSettings());
+  const synchronizedState = applySynchronizedTimer(
+    {
+      ...baseState,
+      timerSettings,
+      timerState: options.timerState ?? createInitialClockState(timerSettings, baseState.turn, baseState.status, options.now)
+    },
+    options.now
+  );
+
+  return synchronizedState;
 }
 
 function setSelection(state, square) {
@@ -209,32 +396,52 @@ function setSelection(state, square) {
   const piece = chess.get(square);
 
   if (!piece || piece.color !== state.turn || state.status !== 'active') {
-    state.ui.selectedSquare = null;
-    state.ui.highlightedSquares = [];
-    return state;
+    return {
+      ...state,
+      ui: {
+        ...state.ui,
+        selectedSquare: null,
+        highlightedSquares: []
+      }
+    };
   }
 
-  state.ui.selectedSquare = square;
-  state.ui.highlightedSquares = chess.moves({ square, verbose: true }).map((move) => move.to);
-  return state;
+  return {
+    ...state,
+    ui: {
+      ...state.ui,
+      selectedSquare: square,
+      highlightedSquares: chess.moves({ square, verbose: true }).map((move) => move.to)
+    }
+  };
 }
 
 function clearInteractionState(state) {
-  state.ui.selectedSquare = null;
-  state.ui.highlightedSquares = [];
-  state.ui.draggedSquare = null;
-  return state;
+  return {
+    ...state,
+    ui: {
+      ...state.ui,
+      selectedSquare: null,
+      highlightedSquares: [],
+      draggedSquare: null
+    }
+  };
 }
 
-function createMoveState(state, from, to) {
-  const moveEvent = createMoveEvent(state.currentFen, from, to);
+function createMoveState(state, from, to, now) {
+  const timedState = applySynchronizedTimer(state, now);
+  if (timedState.status !== 'active') {
+    return clearUiState(timedState);
+  }
+
+  const moveEvent = createMoveEvent(timedState.currentFen, from, to);
 
   if (!moveEvent) {
-    return state;
+    return timedState;
   }
 
   const next = rebuildGameState([
-    ...state.events.map(({ type, from: eventFrom, to: eventTo, color, promotion }) => ({
+    ...timedState.events.map(({ type, from: eventFrom, to: eventTo, color, promotion }) => ({
       type,
       from: eventFrom,
       to: eventTo,
@@ -244,7 +451,18 @@ function createMoveState(state, from, to) {
     moveEvent
   ]);
 
-  return next;
+  return {
+    ...next,
+    timerSettings: timedState.timerSettings,
+    timerState: advanceTimerAfterMove(
+      timedState.timerState,
+      timedState.timerSettings,
+      timedState.turn,
+      next.turn,
+      next.status,
+      now
+    )
+  };
 }
 
 function exportEvents(state) {
@@ -264,77 +482,143 @@ const gameSlice = createSlice({
   initialState,
   reducers: {
     squarePressed(state, action) {
-      const square = action.payload;
+      const square = typeof action.payload === 'string' ? action.payload : action.payload?.square;
+      const now = typeof action.payload === 'object' ? action.payload?.now : null;
 
       if (typeof square !== 'string') {
         return state;
       }
 
-      if (state.status !== 'active') {
-        return clearInteractionState(state);
+      const timedState = applySynchronizedTimer(state, now);
+
+      if (timedState.status !== 'active') {
+        return clearUiState(timedState);
       }
 
-      if (state.ui.selectedSquare === square) {
-        return clearInteractionState(state);
+      if (timedState.ui.selectedSquare === square) {
+        return clearInteractionState(timedState);
       }
 
-      if (state.ui.selectedSquare && state.ui.highlightedSquares.includes(square)) {
-        return createMoveState(state, state.ui.selectedSquare, square);
+      if (timedState.ui.selectedSquare && timedState.ui.highlightedSquares.includes(square)) {
+        return createMoveState(timedState, timedState.ui.selectedSquare, square, now);
       }
 
-      return setSelection(state, square);
+      return setSelection(timedState, square);
     },
     dragStarted(state, action) {
-      const square = action.payload;
-      state.ui.draggedSquare = square;
-      return setSelection(state, square);
-    },
-    dragEnded(state) {
-      state.ui.draggedSquare = null;
-    },
-    moveDropped(state, action) {
-      const { from, to } = action.payload ?? {};
+      const square = typeof action.payload === 'string' ? action.payload : action.payload?.square;
+      const now = typeof action.payload === 'object' ? action.payload?.now : null;
+      const timedState = applySynchronizedTimer(state, now);
 
-      if (typeof from !== 'string' || typeof to !== 'string' || state.status !== 'active') {
-        return state;
+      if (timedState.status !== 'active' || typeof square !== 'string') {
+        return clearUiState(timedState);
       }
 
-      const chess = createChess(state.currentFen);
+      return setSelection({
+        ...timedState,
+        ui: {
+          ...timedState.ui,
+          draggedSquare: square
+        }
+      }, square);
+    },
+    dragEnded(state) {
+      return {
+        ...state,
+        ui: {
+          ...state.ui,
+          draggedSquare: null
+        }
+      };
+    },
+    moveDropped(state, action) {
+      const { from, to, now } = action.payload ?? {};
+
+      const timedState = applySynchronizedTimer(state, now);
+
+      if (typeof from !== 'string' || typeof to !== 'string' || timedState.status !== 'active') {
+        return timedState;
+      }
+
+      const chess = createChess(timedState.currentFen);
       const validTargets = chess.moves({ square: from, verbose: true }).map((move) => move.to);
 
       if (!validTargets.includes(to)) {
-        clearInteractionState(state);
-        return state;
+        clearInteractionState(timedState);
+        return timedState;
       }
 
-      return createMoveState(state, from, to);
+      return createMoveState(timedState, from, to, now);
     },
-    newGameRequested() {
-      return rebuildGameState([{ type: 'game.started' }]);
+    newGameRequested(state, action) {
+      const now = action.payload?.now;
+      return rebuildGameState(
+        [{ type: 'game.started' }],
+        {
+          timerSettings: state.timerSettings,
+          timerState: createInitialClockState(state.timerSettings, 'w', 'active', now),
+          now
+        }
+      );
     },
-    undoRequested(state) {
-      const events = exportEvents(state).filter((event, index) => index > 0);
+    undoRequested(state, action) {
+      const now = action.payload?.now;
+      const timedState = applySynchronizedTimer(state, now);
+      const events = exportEvents(timedState).filter((event, index) => index > 0);
 
       if (events.length === 0) {
-        return state;
+        return timedState;
       }
 
       const nextEvents = [{ type: 'game.started' }, ...events.slice(0, -1)];
-      return rebuildGameState(nextEvents);
+      return rebuildGameState(nextEvents, {
+        timerSettings: timedState.timerSettings,
+        timerState: timedState.timerState,
+        now
+      });
     },
-    resignRequested(state) {
-      if (state.status !== 'active') {
-        return state;
+    resignRequested(state, action) {
+      const now = action.payload?.now;
+      const timedState = applySynchronizedTimer(state, now);
+
+      if (timedState.status !== 'active') {
+        return timedState;
       }
 
       return rebuildGameState([
-        ...exportEvents(state),
-        { type: 'game.resigned', color: state.turn }
-      ]);
+        ...exportEvents(timedState),
+        { type: 'game.resigned', color: timedState.turn }
+      ], {
+        timerSettings: timedState.timerSettings,
+        timerState: timedState.timerState,
+        now
+      });
     },
     hydrateRequested(_state, action) {
       const events = action.payload?.events;
-      return rebuildGameState(events);
+      return rebuildGameState(events, {
+        timerSettings: action.payload?.timerSettings,
+        timerState: action.payload?.timerState
+      });
+    },
+    timeControlsConfigured(state, action) {
+      const timeSettings = normalizeTimeSettings(action.payload);
+      const now = action.payload?.now;
+
+      return {
+        ...state,
+        timerSettings: timeSettings,
+        timerState: createInitialClockState(timeSettings, state.turn, state.status, now)
+      };
+    },
+    clockTicked(state, action) {
+      const now = action.payload;
+
+      if (typeof now !== 'number') {
+        return state;
+      }
+
+      return applySynchronizedTimer(state, now);
     }
   }
 });

@@ -4,6 +4,7 @@
   import Board from '$lib/components/Board.svelte';
   import GameInfo from '$lib/components/GameInfo.svelte';
   import SettingsDialog from '$lib/components/SettingsDialog.svelte';
+  import { getSeatForColor } from '$lib/game/time-controls';
   import { getBoardRows } from '$lib/game/chess-game';
   import { appStore, gameActions, gameState } from '$lib/redux/store';
 
@@ -12,19 +13,30 @@
   // This flips after hydration so interaction tests can wait on a deterministic ready marker.
   let isHydrated = false;
   let activeSettingsCorner = null;
+  let clockIntervalId = null;
 
   onMount(() => {
     isHydrated = true;
+    dispatch(gameActions.clockTicked(Date.now()));
+    clockIntervalId = window.setInterval(() => {
+      dispatch(gameActions.clockTicked(Date.now()));
+    }, 1000);
   });
 
   onDestroy(() => {
     isHydrated = false;
+    if (clockIntervalId) {
+      window.clearInterval(clockIntervalId);
+    }
   });
 
   $: state = $gameState;
   $: boardRows = getBoardRows(state.currentFen, state.ui, state.lastMove);
   $: canUndo = state.events.length > 1;
   $: canResign = state.status === 'active';
+  $: topSeatColor = state.timerSettings.seatColors.top;
+  $: bottomSeatColor = state.timerSettings.seatColors.bottom;
+  $: activeSeat = getSeatForColor(state.timerSettings.seatColors, state.turn);
 
   function toggleSettings(corner) {
     activeSettingsCorner = activeSettingsCorner === corner ? null : corner;
@@ -45,6 +57,13 @@
     dispatch(action);
   }
 
+  function dispatchClockSettings(timeSettings) {
+    dispatch(gameActions.timeControlsConfigured({
+      ...timeSettings,
+      now: Date.now()
+    }));
+  }
+
   function settingsLabel(corner) {
     return `Open ${corner.replace(/-/g, ' ')} settings`;
   }
@@ -60,9 +79,12 @@
 <div class="tabletop-app" data-app-ready={isHydrated}>
   <div class="clock-slot clock-slot-black">
     <GameInfo
-      color="black"
+      seat="top"
       position="left"
-      activeTurn={state.turn}
+      assignedColor={topSeatColor}
+      remainingMs={state.timerState.seats.top.remainingMs}
+      timeControl={state.timerSettings.seats.top}
+      isActive={activeSeat === 'top' && state.status === 'active'}
       status={state.status}
       winner={state.winner}
     />
@@ -82,7 +104,7 @@
         </button>
       {/each}
 
-      <Board rows={boardRows} onPress={(square) => dispatch(gameActions.squarePressed(square))} />
+      <Board rows={boardRows} onPress={(square) => dispatch(gameActions.squarePressed({ square, now: Date.now() }))} />
 
       {#if activeSettingsCorner}
         <SettingsDialog
@@ -92,12 +114,14 @@
           winner={state.winner}
           capturedWhite={state.captured.white}
           capturedBlack={state.captured.black}
+          timeSettings={state.timerSettings}
           {canUndo}
           {canResign}
           onClose={closeSettings}
-          onNewGame={() => dispatchAndClose(gameActions.newGameRequested())}
-          onUndo={() => dispatchAndClose(gameActions.undoRequested())}
-          onResign={() => dispatchAndClose(gameActions.resignRequested())}
+          onNewGame={() => dispatchAndClose(gameActions.newGameRequested({ now: Date.now() }))}
+          onUndo={() => dispatchAndClose(gameActions.undoRequested({ now: Date.now() }))}
+          onResign={() => dispatchAndClose(gameActions.resignRequested({ now: Date.now() }))}
+          onApplyTimeControls={dispatchClockSettings}
         />
       {/if}
     </div>
@@ -105,9 +129,12 @@
 
   <div class="clock-slot clock-slot-white">
     <GameInfo
-      color="white"
+      seat="bottom"
       position="right"
-      activeTurn={state.turn}
+      assignedColor={bottomSeatColor}
+      remainingMs={state.timerState.seats.bottom.remainingMs}
+      timeControl={state.timerSettings.seats.bottom}
+      isActive={activeSeat === 'bottom' && state.status === 'active'}
       status={state.status}
       winner={state.winner}
     />

@@ -1,12 +1,24 @@
 <script>
-  export let color = 'white';
-  export let activeTurn = 'w';
+  import { formatClock, formatTimeControl, getColorName, getSeatLabel } from '$lib/game/time-controls';
+
+  export let seat = 'bottom';
+  export let assignedColor = 'w';
+  export let remainingMs = 0;
+  export let timeControl = { initialMinutes: 15, incrementSeconds: 10 };
+  export let isActive = false;
   export let status = 'active';
   export let winner = null;
   export let position = 'stacked';
 
-  $: isActive = activeTurn === (color === 'white' ? 'w' : 'b') && status === 'active';
-  $: statusLabel = status === 'active' ? (isActive ? 'Your move' : 'Waiting') : winner ? `${winner} won` : status;
+  $: seatLabel = getSeatLabel(seat);
+  $: colorLabel = getColorName(assignedColor);
+  $: clockLabel = formatClock(remainingMs);
+  $: timeControlLabel = formatTimeControl(timeControl);
+  $: statusLabel = status === 'active'
+    ? (isActive ? 'Your move' : 'Waiting')
+    : winner
+      ? (winner === colorLabel ? 'Won' : 'Lost')
+      : status;
 </script>
 
 <section
@@ -15,10 +27,11 @@
   class:left={position === 'left'}
   class:right={position === 'right'}
   class="clock"
-  aria-label={`${color} clock`}
+  aria-label={`${seat} seat clock`}
 >
-  <p class="side-label">{color}</p>
-  <div class="time-face" aria-hidden="true">--:--</div>
+  <p class="side-label">{seatLabel}</p>
+  <div class="time-face" aria-label={`${seatLabel} remaining time`}>{clockLabel}</div>
+  <p class="assignment-label">{colorLabel} pieces · {timeControlLabel}</p>
   <p class="status-label">{statusLabel}</p>
 </section>
 
@@ -71,6 +84,14 @@
     text-transform: uppercase;
   }
 
+  .assignment-label {
+    color: #9ab0c0;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
   @media (orientation: landscape) {
     .clock.side {
       height: 100%;
@@ -82,8 +103,8 @@
         rgba(11, 18, 26, 0.56);
       align-content: center;
       justify-items: center;
-      grid-template-rows: auto auto auto;
-      gap: 0.7rem;
+      grid-template-rows: auto auto auto auto;
+      gap: 0.55rem;
     }
 
     .clock.left {
@@ -110,6 +131,11 @@
       font-size: 0.86rem;
       text-align: center;
       line-height: 1.25;
+    }
+
+    .clock.side .assignment-label {
+      font-size: 0.75rem;
+      line-height: 1.35;
     }
   }
 </style>

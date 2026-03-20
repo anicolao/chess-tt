@@ -15,6 +15,9 @@ describe('game reducer', () => {
     expect(state.captured.white).toHaveLength(0);
     expect(state.captured.black).toHaveLength(0);
     expect(state.events.map((event) => event.type)).toEqual(['game.started']);
+    expect(state.timerSettings.seats.top.initialMinutes).toBe(15);
+    expect(state.timerSettings.seats.bottom.initialMinutes).toBe(15);
+    expect(state.timerState.activeSeat).toBe('bottom');
   });
 
   test('selects a piece and highlights legal moves', () => {
@@ -87,5 +90,50 @@ describe('game reducer', () => {
     expect(state.status).toBe('checkmate');
     expect(state.winner).toBe('black');
     expect(state.message).toBe('Black wins by checkmate');
+  });
+
+  test('applies custom seat time controls independently', () => {
+    const state = gameReducer(undefined, gameActions.timeControlsConfigured({
+      seats: {
+        top: { initialMinutes: 15, incrementSeconds: 10 },
+        bottom: { initialMinutes: 3, incrementSeconds: 2 }
+      },
+      now: 0
+    }));
+
+    expect(state.timerSettings.presetId).toBe('custom');
+    expect(state.timerState.seats.top.remainingMs).toBe(900000);
+    expect(state.timerState.seats.bottom.remainingMs).toBe(180000);
+    expect(state.timerState.activeSeat).toBe('bottom');
+  });
+
+  test('switches the active seat and applies increment after a move', () => {
+    let state = gameReducer(undefined, gameActions.clockTicked(1000));
+
+    state = gameReducer(state, gameActions.squarePressed({ square: 'e2', now: 1000 }));
+    state = gameReducer(state, gameActions.squarePressed({ square: 'e4', now: 4000 }));
+
+    expect(state.turn).toBe('b');
+    expect(state.timerState.activeSeat).toBe('top');
+    expect(state.timerState.seats.bottom.remainingMs).toBe(907000);
+    expect(state.timerState.seats.top.remainingMs).toBe(900000);
+  });
+
+  test('flags timeout based on the active table side clock', () => {
+    let state = gameReducer(undefined, gameActions.timeControlsConfigured({
+      seats: {
+        top: { initialMinutes: 2, incrementSeconds: 0 },
+        bottom: { initialMinutes: 1, incrementSeconds: 0 }
+      },
+      now: 0
+    }));
+
+    state = gameReducer(state, gameActions.clockTicked(61000));
+
+    expect(state.status).toBe('timeout');
+    expect(state.winner).toBe('black');
+    expect(state.message).toBe('Black wins on time');
+    expect(state.timerState.activeSeat).toBeNull();
+    expect(state.timerState.seats.bottom.remainingMs).toBe(0);
   });
 });
