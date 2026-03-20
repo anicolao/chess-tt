@@ -12,7 +12,7 @@ export default defineConfig({
     timeout: 2000,
   },
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://127.0.0.1:5173',
     trace: 'on-first-retry',
     screenshot: 'on',
     actionTimeout: 2000,
@@ -26,12 +26,14 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:5173',
+    url: 'http://127.0.0.1:5173',
     reuseExistingServer: !process.env.CI,
     /* 
      * EXCEPTION: The 2000ms timeout rule is increased to 10000ms ONLY for 
-     * webServer startup in CI environments, as 2000ms is insufficient 
-     * for a reliable warm-up on GitHub Actions runners.
+     * webServer startup in CI environments (GitHub Actions). This is to 
+     * accommodate potentially slower runner startup times and ensure 
+     * reliable test execution without violating the core 2000ms rule 
+     * for application/test logic.
      */
     timeout: process.env.CI ? 10000 : 2000,
   },
