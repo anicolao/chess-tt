@@ -21,6 +21,7 @@ All contributors (human and AI) must adhere to the following workflow when execu
 5. **Iterative Development**:
    - Commit often with descriptive messages.
    - Push frequently to your branch.
+   - **Safe CLI Usage**: When passing multi-line strings or Markdown to CLI tools (e.g., `gh pr comment`), always use temporary files or here-documents (`<<'EOF'`) to avoid shell quoting and escaping issues (especially with backticks). Never attempt to pass large blocks of Markdown as a direct command-line argument.
 
 6. **Testing & Validation**:
    - **Unit Tests**: All core logic, especially event sourcing and redux reducers, must have comprehensive unit tests.
