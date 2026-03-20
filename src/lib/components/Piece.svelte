@@ -23,7 +23,6 @@
     line-height: 1;
     filter: drop-shadow(0 0.12rem 0.2rem rgba(0, 0, 0, 0.4));
     touch-action: none;
-    transform: rotate(0deg);
     transform-origin: center;
     user-select: none;
   }
