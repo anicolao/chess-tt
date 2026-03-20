@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { TestStepHelper } from '../helpers/test-step-helper';
 
+const CENTERING_TOLERANCE_PX = 24;
+
 test('MVP board selection highlights legal moves', async ({ page }, testInfo) => {
   const tester = new TestStepHelper(page, testInfo);
   tester.setMetadata(
@@ -50,9 +52,45 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
         }
       },
       {
-        spec: 'The top clock remains visible above the board',
+        spec: 'The landscape layout fits the viewport without page scrolling',
         check: async () => {
-          await expect(page.getByLabel('black clock')).toContainText('Waiting');
+          const fitsViewport = await page.evaluate(() => (
+            document.documentElement.scrollHeight <= document.documentElement.clientHeight &&
+            document.documentElement.scrollWidth <= document.documentElement.clientWidth
+          ));
+
+          expect(fitsViewport).toBe(true);
+        }
+      },
+      {
+        spec: 'The clocks flank the centered board in landscape',
+        check: async () => {
+          const layout = await page.evaluate(() => {
+            const board = document.querySelector('[aria-label="Chess board"]')?.getBoundingClientRect();
+            const blackClock = document.querySelector('[aria-label="black clock"]')?.getBoundingClientRect();
+            const whiteClock = document.querySelector('[aria-label="white clock"]')?.getBoundingClientRect();
+
+            if (!board || !blackClock || !whiteClock) {
+              return null;
+            }
+
+            return {
+              boardLeft: board.left,
+              boardRight: board.right,
+              boardCenter: board.left + (board.width / 2),
+              blackRight: blackClock.right,
+              whiteLeft: whiteClock.left,
+              viewportCenter: window.innerWidth / 2
+            };
+          });
+
+          if (!layout) {
+            throw new Error('Expected landscape layout metrics for both clocks and the board.');
+          }
+
+          expect(layout.blackRight).toBeLessThan(layout.boardLeft);
+          expect(layout.whiteLeft).toBeGreaterThan(layout.boardRight);
+          expect(Math.abs(layout.boardCenter - layout.viewportCenter)).toBeLessThan(CENTERING_TOLERANCE_PX);
         }
       }
     ]

@@ -3,13 +3,20 @@
   export let activeTurn = 'w';
   export let status = 'active';
   export let winner = null;
-  export let mirrored = false;
+  export let position = 'stacked';
 
   $: isActive = activeTurn === (color === 'white' ? 'w' : 'b') && status === 'active';
   $: statusLabel = status === 'active' ? (isActive ? 'Your move' : 'Waiting') : winner ? `${winner} won` : status;
 </script>
 
-<section class:mirrored class:active={isActive} class="clock" aria-label={`${color} clock`}>
+<section
+  class:active={isActive}
+  class:side={position !== 'stacked'}
+  class:left={position === 'left'}
+  class:right={position === 'right'}
+  class="clock"
+  aria-label={`${color} clock`}
+>
   <p class="side-label">{color}</p>
   <div class="time-face" aria-hidden="true">--:--</div>
   <p class="status-label">{statusLabel}</p>
@@ -33,10 +40,6 @@
       inset 0 0 0 1px rgba(102, 214, 255, 0.42),
       0 0 0 0.18rem rgba(102, 214, 255, 0.12),
       0 0.35rem 1rem rgba(0, 0, 0, 0.18);
-  }
-
-  .mirrored {
-    transform: rotate(180deg);
   }
 
   p {
@@ -66,5 +69,47 @@
     font-size: 0.78rem;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+  }
+
+  @media (orientation: landscape) {
+    .clock.side {
+      height: 100%;
+      min-height: 0;
+      padding: 1rem 0.85rem;
+      border-radius: 1.8rem;
+      background:
+        linear-gradient(180deg, rgba(15, 23, 32, 0.82), rgba(11, 18, 26, 0.56)),
+        rgba(11, 18, 26, 0.56);
+      align-content: center;
+      justify-items: center;
+      grid-template-rows: auto auto auto;
+      gap: 0.7rem;
+    }
+
+    .clock.left {
+      border-top-left-radius: 2.3rem;
+      border-bottom-left-radius: 2.3rem;
+    }
+
+    .clock.right {
+      border-top-right-radius: 2.3rem;
+      border-bottom-right-radius: 2.3rem;
+    }
+
+    .clock.side .side-label {
+      font-size: 0.82rem;
+    }
+
+    .clock.side .time-face {
+      min-width: auto;
+      font-size: clamp(2.5rem, 6vh, 4.4rem);
+      letter-spacing: 0.04em;
+    }
+
+    .clock.side .status-label {
+      font-size: 0.86rem;
+      text-align: center;
+      line-height: 1.25;
+    }
   }
 </style>
