@@ -6,11 +6,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky",
-    "test:unit": "echo 'No unit tests yet' && exit 0",
-    "test:e2e": "echo 'No e2e tests yet' && exit 0",
+    "test:unit": "vitest run --passWithNoTests --exclude tests/e2e",
+    "test:e2e": "playwright test",
     "build": "mkdir -p build && echo '<html><body>Chess Tabletop MVP Scaffold</body></html>' > build/index.html && echo '<html><body>404</body></html>' > build/404.html",
     "check": "echo 'No check needed yet'",
-    "dev": "echo 'No dev mode yet'",
+    "dev": "npx http-server build -p 5173",
     "preview": "echo 'No preview mode yet'"
   },
   "keywords": [],
@@ -18,6 +18,9 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "husky": "^9.1.7"
+    "@playwright/test": "^1.58.2",
+    "http-server": "^14.1.1",
+    "husky": "^9.1.7",
+    "vitest": "^4.1.0"
   }
 }
