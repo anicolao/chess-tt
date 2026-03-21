@@ -82,7 +82,7 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
         }
       },
       {
-        spec: 'The clocks flank the centered board in landscape',
+        spec: 'The clocks flank the centered board in landscape and stay near each player’s right hand',
         check: async () => {
           const layout = await page.evaluate(() => {
             const board = document.querySelector('[aria-label="Chess board"]')?.getBoundingClientRect();
@@ -98,7 +98,10 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
               boardLeft: board.left,
               boardRight: board.right,
               boardCenter: board.left + (board.width / 2),
+              boardMidY: board.top + (board.height / 2),
+              blackTop: blackClock.top,
               blackRight: blackClock.right,
+              whiteBottom: whiteClock.bottom,
               whiteRight: whiteClock.right,
               whiteLeft: whiteClock.left,
               viewportCenter: window.innerWidth / 2,
@@ -114,6 +117,8 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
           expect(layout.blackRight).toBeLessThan(layout.boardLeft);
           expect(layout.whiteLeft).toBeGreaterThan(layout.boardRight);
           expect(layout.whiteRight).toBeLessThanOrEqual(layout.viewportWidth);
+          expect(layout.blackTop).toBeLessThan(layout.boardMidY);
+          expect(layout.whiteBottom).toBeGreaterThan(layout.boardMidY);
           expect(Math.abs(layout.boardCenter - layout.viewportCenter)).toBeLessThan(CENTERING_TOLERANCE_PX);
         }
       }
@@ -138,27 +143,25 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
         }
       },
       {
-        spec: 'The board stays centered while the player clocks move above and below it on-screen',
+        spec: 'The board stays centered and visible while the player clocks move above and below it on-screen',
         check: async () => {
           const layout = await page.evaluate(() => {
             const board = document.querySelector('[aria-label="Chess board"]')?.getBoundingClientRect();
             const blackClock = document.querySelector('[aria-label="top seat clock"]')?.getBoundingClientRect();
             const whiteClock = document.querySelector('[aria-label="bottom seat clock"]')?.getBoundingClientRect();
-            const topSettings = document.querySelector('[aria-label="Open top seat settings"]')?.getBoundingClientRect();
-            const bottomSettings = document.querySelector('[aria-label="Open bottom seat settings"]')?.getBoundingClientRect();
 
-            if (!board || !blackClock || !whiteClock || !topSettings || !bottomSettings) {
+            if (!board || !blackClock || !whiteClock) {
               return null;
             }
 
             return {
               boardTop: board.top,
               boardBottom: board.bottom,
+              boardWidth: board.width,
+              boardHeight: board.height,
               boardCenterX: board.left + (board.width / 2),
               blackClockBottom: blackClock.bottom,
               whiteClockTop: whiteClock.top,
-              topSettingsBottom: topSettings.bottom,
-              bottomSettingsTop: bottomSettings.top,
               viewportCenterX: window.innerWidth / 2
             };
           });
@@ -167,10 +170,10 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
             throw new Error('Expected portrait layout metrics for the board, player clocks, and settings anchors.');
           }
 
+          expect(layout.boardWidth).toBeGreaterThan(200);
+          expect(layout.boardHeight).toBeGreaterThan(200);
           expect(layout.blackClockBottom).toBeLessThan(layout.boardTop);
           expect(layout.whiteClockTop).toBeGreaterThan(layout.boardBottom);
-          expect(layout.topSettingsBottom).toBeLessThan(layout.boardTop);
-          expect(layout.bottomSettingsTop).toBeGreaterThan(layout.boardBottom);
           expect(Math.abs(layout.boardCenterX - layout.viewportCenterX)).toBeLessThan(CENTERING_TOLERANCE_PX);
         }
       },

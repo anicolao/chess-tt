@@ -1,5 +1,5 @@
 <script>
-  import { formatClock, formatTimeControl, getColorName, getSeatLabel } from '$lib/game/time-controls';
+  import { formatClock, formatTimeControl, getColorName } from '$lib/game/time-controls';
 
   export let seat = 'bottom';
   export let assignedColor = 'w';
@@ -10,7 +10,6 @@
   export let winner = null;
   export let position = 'stacked';
 
-  $: seatLabel = getSeatLabel(seat);
   $: colorLabel = getColorName(assignedColor);
   $: clockLabel = formatClock(remainingMs);
   $: timeControlLabel = formatTimeControl(timeControl);
@@ -19,18 +18,20 @@
     : winner
       ? (winner === colorLabel ? 'Won' : 'Lost')
       : status;
+  $: screenReaderLabel = `${seat} seat clock`;
 </script>
 
 <section
   class:active={isActive}
+  class:flipped={seat === 'top'}
   class:side={position !== 'stacked'}
   class:left={position === 'left'}
   class:right={position === 'right'}
   class="clock"
   aria-label={`${seat} seat clock`}
 >
-  <p class="side-label">{seatLabel}</p>
-  <div class="time-face" aria-label={`${seatLabel} remaining time`}>{clockLabel}</div>
+  <p class="side-label">{screenReaderLabel}</p>
+  <div class="time-face" aria-label={`${screenReaderLabel} remaining time`}>{clockLabel}</div>
   <p class="assignment-label">{colorLabel} pieces · {timeControlLabel}</p>
   <p class="status-label">{statusLabel}</p>
 </section>
@@ -54,6 +55,10 @@
       inset 0 0 0 1px rgba(102, 214, 255, 0.42),
       0 0 0 0.18rem rgba(102, 214, 255, 0.12),
       0 0.35rem 1rem rgba(0, 0, 0, 0.18);
+  }
+
+  .clock.flipped {
+    transform: rotate(180deg);
   }
 
   p {
@@ -99,6 +104,7 @@
 
   @media (orientation: landscape) {
     .clock.side {
+      width: 100%;
       height: 100%;
       min-height: 0;
       padding: 1rem 0.85rem;
@@ -113,11 +119,13 @@
     }
 
     .clock.left {
+      align-self: start;
       border-top-left-radius: 2.3rem;
       border-bottom-left-radius: 2.3rem;
     }
 
     .clock.right {
+      align-self: end;
       border-top-right-radius: 2.3rem;
       border-bottom-right-radius: 2.3rem;
     }

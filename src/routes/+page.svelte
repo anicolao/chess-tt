@@ -39,6 +39,7 @@
   $: topSeatColor = state.timerSettings.seatColors.top;
   $: bottomSeatColor = state.timerSettings.seatColors.bottom;
   $: activeSeat = state.timerState.activeSeat;
+  $: activeSettingsSeat = playerSettingsAnchors.find(({ corner }) => corner === activeSettingsCorner)?.seat ?? 'bottom';
 
   function toggleSettings(corner) {
     activeSettingsCorner = activeSettingsCorner === corner ? null : corner;
@@ -112,6 +113,7 @@
         {#if activeSettingsCorner}
           <SettingsDialog
             corner={activeSettingsCorner}
+            invokingSeat={activeSettingsSeat}
             message={state.message}
             status={state.status}
             winner={state.winner}
@@ -248,6 +250,16 @@
   }
 
   @media (orientation: landscape) {
+    .clock-slot-black {
+      align-content: start;
+      padding-block: 1.6rem 0.7rem;
+    }
+
+    .clock-slot-white {
+      align-content: end;
+      padding-block: 0.7rem 1.6rem;
+    }
+
     .board-frame {
       padding: 1.2rem 1.4rem;
     }
@@ -255,14 +267,38 @@
 
   @media (orientation: portrait) {
     .tabletop-app {
-      --portrait-tabletop-width: min(100dvh, 100rem);
-      width: var(--portrait-tabletop-width);
-      max-width: 100dvh;
-      height: 100vw;
-      position: relative;
-      left: calc((100vw - var(--portrait-tabletop-width)) / 2);
-      transform: rotate(90deg);
-      transform-origin: center center;
+      width: 100vw;
+      height: 100dvh;
+      padding: 0.75rem;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 0.75rem;
+    }
+
+    .clock-slot-black,
+    .clock-slot-white,
+    .play-area {
+      grid-column: 1;
+    }
+
+    .clock-slot-black {
+      grid-row: 1;
+      align-content: start;
+    }
+
+    .play-area {
+      grid-row: 2;
+    }
+
+    .clock-slot-white {
+      grid-row: 3;
+      align-content: end;
+    }
+
+    .board-frame {
+      width: 100%;
+      height: 100%;
+      padding: 0.5rem 2.2rem;
     }
   }
 </style>

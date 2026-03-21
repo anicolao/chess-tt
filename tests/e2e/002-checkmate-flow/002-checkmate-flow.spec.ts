@@ -26,7 +26,7 @@ test('MVP move updates board state and controls', async ({ page }, testInfo) => 
       {
         spec: 'The bottom seat clock flips to waiting after the move',
         check: async () => {
-          await expect(page.getByLabel('bottom seat clock')).toContainText('Waiting');
+          await expect(page.getByRole('region', { name: 'bottom seat clock' })).toContainText('Waiting');
         }
       },
       {
