@@ -141,4 +141,27 @@ describe('game reducer', () => {
     expect(state.timerState.activeSeat).toBeNull();
     expect(state.timerState.seats.top.remainingMs).toBe(0);
   });
+
+  test('does not start or expire clocks in no-clock mode', () => {
+    let state = gameReducer(undefined, gameActions.timeControlsConfigured({
+      presetId: 'no-clock',
+      seats: {
+        top: { initialMinutes: 0, incrementSeconds: 0 },
+        bottom: { initialMinutes: 0, incrementSeconds: 0 }
+      },
+      now: 0
+    }));
+
+    state = gameReducer(state, gameActions.clockTicked(1000));
+    state = gameReducer(state, gameActions.squarePressed({ square: 'e2', now: 1000 }));
+    state = gameReducer(state, gameActions.squarePressed({ square: 'e4', now: 4000 }));
+    state = gameReducer(state, gameActions.clockTicked(121000));
+
+    expect(state.status).toBe('active');
+    expect(state.timerSettings.presetId).toBe('no-clock');
+    expect(state.timerState.activeSeat).toBeNull();
+    expect(state.timerState.lastUpdatedAt).toBeNull();
+    expect(state.timerState.seats.top.remainingMs).toBe(0);
+    expect(state.timerState.seats.bottom.remainingMs).toBe(0);
+  });
 });

@@ -50,7 +50,7 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
     ]
   });
 
-  await page.getByLabel('Time control preset').selectOption('rapid-5-3');
+  await page.getByLabel('Time control preset').selectOption('blitz-5-3');
   await page.getByRole('button', { name: 'Apply clock settings' }).click();
   await page.evaluate(() => window['__setMockNow'](1000));
 

@@ -7,6 +7,7 @@ import {
   getColorName,
   getIncrementMs,
   getSeatForColor,
+  isNoClockTimeSettings,
   normalizeClockState,
   normalizeTimeSettings
 } from '$lib/game/time-controls';
@@ -126,6 +127,17 @@ function synchronizeTimerState(timerState, timerSettings, turn, status, now, clo
   const normalizedTimerState = normalizeClockState(timerState, timerSettings, turn, status, clockArmed);
 
   if (status !== 'active') {
+    return {
+      timerState: {
+        ...normalizedTimerState,
+        activeSeat: null,
+        lastUpdatedAt: null
+      },
+      expiredSeat: null
+    };
+  }
+
+  if (isNoClockTimeSettings(timerSettings)) {
     return {
       timerState: {
         ...normalizedTimerState,
@@ -258,6 +270,14 @@ function applySynchronizedTimer(state, now) {
 }
 
 function advanceTimerAfterMove(timerState, timerSettings, movingColor, nextTurn, status, now) {
+  if (isNoClockTimeSettings(timerSettings)) {
+    return {
+      ...normalizeClockState(timerState, timerSettings, nextTurn, status, false),
+      activeSeat: null,
+      lastUpdatedAt: null
+    };
+  }
+
   const movingSeat = getSeatForColor(timerSettings.seatColors, movingColor);
   const nextActiveSeat = status === 'active' ? getSeatForColor(timerSettings.seatColors, nextTurn) : null;
 

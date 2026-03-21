@@ -62,7 +62,7 @@
   let safeTimeSettings = timeSettings ?? fallbackTimeSettings;
   $: safeTimeSettings = timeSettings ?? fallbackTimeSettings;
   let syncedTimeSettings = cloneComparableTimeSettings(safeTimeSettings);
-  let selectedPresetId = safeTimeSettings.presetId ?? TIME_CONTROL_PRESETS[0].id;
+  let selectedPresetId = safeTimeSettings.presetId ?? fallbackTimeSettings.presetId;
   let topMinutes = safeTimeSettings.seats.top.initialMinutes;
   let topIncrement = safeTimeSettings.seats.top.incrementSeconds;
   let bottomMinutes = safeTimeSettings.seats.bottom.initialMinutes;
@@ -74,7 +74,7 @@
 
   $: if (!timeSettingsMatch(comparableSafeTimeSettings, syncedTimeSettings)) {
     syncedTimeSettings = comparableSafeTimeSettings;
-    selectedPresetId = safeTimeSettings.presetId ?? TIME_CONTROL_PRESETS[0].id;
+    selectedPresetId = safeTimeSettings.presetId ?? fallbackTimeSettings.presetId;
     topMinutes = safeTimeSettings.seats.top.initialMinutes;
     topIncrement = safeTimeSettings.seats.top.incrementSeconds;
     bottomMinutes = safeTimeSettings.seats.bottom.initialMinutes;
