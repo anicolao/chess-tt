@@ -272,6 +272,7 @@ function advanceTimerAfterMove(timerState, timerSettings, movingColor, nextTurn,
     seats: {
       ...timerState.seats,
       [movingSeat]: {
+        // Only award increment when the moving seat's clock was actually running.
         remainingMs: timerState.seats[movingSeat].remainingMs + (
           timerState.activeSeat === movingSeat ? getIncrementMs(timerSettings, movingSeat) : 0
         )

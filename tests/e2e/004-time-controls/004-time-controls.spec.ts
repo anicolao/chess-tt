@@ -81,5 +81,28 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
     ]
   });
 
+  await page.getByRole('button', { name: /Open bottom right settings/i }).click();
+  await page.getByRole('group', { name: 'Top seat' }).getByRole('spinbutton', { name: 'Minutes' }).fill('14');
+  await tester.step('editing-during-live-clock', {
+    description: 'Editing a time control stays stable while a live clock is running',
+    verifications: [
+      {
+        spec: 'The running top seat clock remains active while settings stay open',
+        check: async () => {
+          await expect(page.getByLabel('top seat clock')).toContainText('04:59');
+          await expect(page.getByLabel('top seat clock')).toContainText('Your move');
+        }
+      },
+      {
+        spec: 'The in-progress top seat minute edit is preserved while the live clock is running',
+        check: async () => {
+          await expect(
+            page.getByRole('group', { name: 'Top seat' }).getByRole('spinbutton', { name: 'Minutes' })
+          ).toHaveValue('14');
+        }
+      }
+    ]
+  });
+
   tester.generateDocs();
 });
