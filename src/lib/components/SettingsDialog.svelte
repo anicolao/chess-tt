@@ -24,33 +24,51 @@
   export let onResign = () => {};
   export let onApplyTimeControls = () => {};
 
-  function getTimeSettingsSignature(settings) {
-    return [
-      settings.presetId,
-      settings.seatColors.top,
-      settings.seatColors.bottom,
-      settings.seats.top.initialMinutes,
-      settings.seats.top.incrementSeconds,
-      settings.seats.bottom.initialMinutes,
-      settings.seats.bottom.incrementSeconds
-    ].join('|');
+  function cloneComparableTimeSettings(settings) {
+    return {
+      presetId: settings.presetId,
+      seatColors: {
+        top: settings.seatColors.top,
+        bottom: settings.seatColors.bottom
+      },
+      seats: {
+        top: {
+          initialMinutes: settings.seats.top.initialMinutes,
+          incrementSeconds: settings.seats.top.incrementSeconds
+        },
+        bottom: {
+          initialMinutes: settings.seats.bottom.initialMinutes,
+          incrementSeconds: settings.seats.bottom.incrementSeconds
+        }
+      }
+    };
+  }
+
+  function timeSettingsMatch(left, right) {
+    return left.presetId === right.presetId &&
+      left.seatColors.top === right.seatColors.top &&
+      left.seatColors.bottom === right.seatColors.bottom &&
+      left.seats.top.initialMinutes === right.seats.top.initialMinutes &&
+      left.seats.top.incrementSeconds === right.seats.top.incrementSeconds &&
+      left.seats.bottom.initialMinutes === right.seats.bottom.initialMinutes &&
+      left.seats.bottom.incrementSeconds === right.seats.bottom.incrementSeconds;
   }
 
   $: facesTopEdge = corner.startsWith('top');
   const fallbackTimeSettings = createDefaultTimeSettings();
   let safeTimeSettings = timeSettings ?? fallbackTimeSettings;
   $: safeTimeSettings = timeSettings ?? fallbackTimeSettings;
-  let syncedTimeSettingsSignature = getTimeSettingsSignature(safeTimeSettings);
+  let syncedTimeSettings = cloneComparableTimeSettings(safeTimeSettings);
   let selectedPresetId = safeTimeSettings.presetId ?? TIME_CONTROL_PRESETS[0].id;
   let topMinutes = safeTimeSettings.seats.top.initialMinutes;
   let topIncrement = safeTimeSettings.seats.top.incrementSeconds;
   let bottomMinutes = safeTimeSettings.seats.bottom.initialMinutes;
   let bottomIncrement = safeTimeSettings.seats.bottom.incrementSeconds;
 
-  $: safeTimeSettingsSignature = getTimeSettingsSignature(safeTimeSettings);
+  $: comparableSafeTimeSettings = cloneComparableTimeSettings(safeTimeSettings);
 
-  $: if (safeTimeSettingsSignature !== syncedTimeSettingsSignature) {
-    syncedTimeSettingsSignature = safeTimeSettingsSignature;
+  $: if (!timeSettingsMatch(comparableSafeTimeSettings, syncedTimeSettings)) {
+    syncedTimeSettings = comparableSafeTimeSettings;
     selectedPresetId = safeTimeSettings.presetId ?? TIME_CONTROL_PRESETS[0].id;
     topMinutes = safeTimeSettings.seats.top.initialMinutes;
     topIncrement = safeTimeSettings.seats.top.incrementSeconds;
