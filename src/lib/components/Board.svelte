@@ -20,14 +20,12 @@
 
 <style>
   .board-shell {
-    /* Total vertical space reserved for shell padding, page padding, and corner gear clearance. */
-    --landscape-board-height-offset: 4.5rem;
-    /* Combined width reserved for both side clock rails, page padding, and inter-column gaps. */
-    --landscape-board-width-offset: 28rem;
-    /* Combined horizontal space reserved for portrait side clocks, padding, and the player-relative gear buttons. */
-    --portrait-board-width-offset: 17rem;
-    width: fit-content;
-    max-width: 100%;
+    /* Total space reserved along the short axis for shell padding, page padding, and corner gear clearance. */
+    --board-short-axis-offset: 4.5rem;
+    /* Combined space reserved along the long axis for both clock rails, page padding, and inter-column gaps.
+       32rem covers two 12rem rails plus the tabletop gap/padding budget and the rotated clock overhang needed
+       for the paired 1024×768 landscape / 768×1024 portrait parity check to keep the rails fully outside the board. */
+    --board-long-axis-offset: 32rem;
     padding: 0.85rem;
     border-radius: 1.65rem;
     background:
@@ -41,7 +39,7 @@
   .board {
     display: grid;
     grid-template-columns: repeat(8, minmax(0, 1fr));
-    width: min(86vmin, calc(100vw - var(--portrait-board-width-offset)), 52rem);
+    width: min(100%, 86vmin, 52rem);
     border-radius: 1rem;
     overflow: hidden;
   }
@@ -53,8 +51,18 @@
 
     .board {
       width: min(
-        calc(100svh - var(--landscape-board-height-offset)),
-        calc(100vw - var(--landscape-board-width-offset)),
+        calc(100svh - var(--board-short-axis-offset)),
+        calc(100vw - var(--board-long-axis-offset)),
+        60rem
+      );
+    }
+  }
+
+  @media (orientation: portrait) {
+    .board {
+      width: min(
+        calc(100vw - var(--board-short-axis-offset)),
+        calc(100dvh - var(--board-long-axis-offset)),
         60rem
       );
     }

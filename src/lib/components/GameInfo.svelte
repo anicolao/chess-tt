@@ -150,41 +150,44 @@
 
   @media (orientation: portrait) {
     .clock.side {
-      width: 100%;
+      height: 100%;
       min-height: 0;
-      padding: 0.8rem 0.4rem;
-      border-radius: 1.65rem;
+      padding: 1rem 0.85rem;
+      border-radius: 1.8rem;
       background:
         linear-gradient(180deg, rgba(15, 23, 32, 0.82), rgba(11, 18, 26, 0.56)),
         rgba(11, 18, 26, 0.56);
       align-content: center;
       justify-items: center;
-      grid-template-rows: auto auto auto;
-      gap: 0.4rem;
-      transform-origin: center center;
+      grid-template-rows: auto auto auto auto;
+      gap: 0.55rem;
     }
 
     .clock.side.left {
-      align-self: center;
-      transform: rotate(-90deg);
+      border-top-left-radius: 2.3rem;
+      border-bottom-left-radius: 2.3rem;
     }
 
     .clock.side.right {
-      align-self: center;
-      transform: rotate(90deg);
+      border-top-right-radius: 2.3rem;
+      border-bottom-right-radius: 2.3rem;
     }
 
     .clock.side .time-face {
       min-width: auto;
-      font-size: clamp(2rem, 3.2vh, 2.9rem);
+      font-size: clamp(2.5rem, 6vh, 4.4rem);
       letter-spacing: 0.04em;
     }
 
-    .clock.side .status-label,
-    .clock.side .assignment-label {
-      font-size: 0.7rem;
+    .clock.side .status-label {
+      font-size: 0.86rem;
       line-height: 1.25;
       text-align: center;
+    }
+
+    .clock.side .assignment-label {
+      font-size: 0.75rem;
+      line-height: 1.35;
     }
   }
 </style>
