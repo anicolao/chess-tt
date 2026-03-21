@@ -97,10 +97,12 @@
 
   .coordinate-strip.top {
     grid-row: 1;
+    margin-bottom: 0.32rem;
   }
 
   .coordinate-strip.bottom {
     grid-row: 3;
+    margin-top: 0.32rem;
   }
 
   .coordinate-strip.left {
