@@ -19,7 +19,7 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
 
   await page.goto('/');
   await expect(page.locator('[data-app-ready="true"]')).toBeVisible();
-  await page.getByRole('button', { name: /Open bottom right settings/i }).click();
+  await page.getByRole('button', { name: /Open bottom seat settings/i }).click();
 
   await page.getByRole('group', { name: 'Top seat' }).getByRole('spinbutton', { name: 'Minutes' }).fill('15');
   await page.getByRole('group', { name: 'Bottom seat' }).getByRole('spinbutton', { name: 'Minutes' }).fill('3');
@@ -61,7 +61,7 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
   await page.getByRole('button', { name: /e2, White pawn/i }).click();
   await page.locator('[data-square="e4"]').click();
   await page.evaluate(() => window['__setMockNow'](2000));
-  await page.getByRole('button', { name: /Open bottom right settings/i }).click();
+  await page.getByRole('button', { name: /Open bottom seat settings/i }).click();
   await page.getByRole('group', { name: 'Top seat' }).getByRole('spinbutton', { name: 'Minutes' }).fill('14');
   await tester.step('live-clock-switch', {
     description: 'The live clock handoff and settings editing stay stable after move one',

@@ -27,7 +27,7 @@ test('Persisted checkmate state is restored on load', async ({ page }, testInfo)
 
   await page.goto('/');
   await expect(page.locator('[data-app-ready="true"]')).toBeVisible();
-  await page.getByRole('button', { name: /Open top left settings/i }).click();
+  await page.getByRole('button', { name: /Open top seat settings/i }).click();
 
   await tester.step('restored-checkmate', {
     description: 'A Persisted Checkmate Position and Settings View Restore Correctly',

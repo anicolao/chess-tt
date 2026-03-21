@@ -12,7 +12,7 @@ test('MVP move updates board state and controls', async ({ page }, testInfo) => 
   await expect(page.locator('[data-app-ready="true"]')).toBeVisible();
   await page.getByRole('button', { name: /e2, White pawn/i }).click();
   await page.locator('[data-square="e4"]').click();
-  await page.getByRole('button', { name: /Open bottom right settings/i }).click();
+  await page.getByRole('button', { name: /Open bottom seat settings/i }).click();
 
   await tester.step('pawn-moved', {
     description: 'A Legal Move Updates the Game State',

@@ -37,6 +37,7 @@
 
 <style>
   .clock {
+    position: relative;
     display: grid;
     justify-items: center;
     gap: 0.35rem;
@@ -60,11 +61,15 @@
   }
 
   .side-label {
-    color: #91a8b9;
-    font-size: 0.74rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .time-face {
@@ -115,10 +120,6 @@
     .clock.right {
       border-top-right-radius: 2.3rem;
       border-bottom-right-radius: 2.3rem;
-    }
-
-    .clock.side .side-label {
-      font-size: 0.82rem;
     }
 
     .clock.side .time-face {
