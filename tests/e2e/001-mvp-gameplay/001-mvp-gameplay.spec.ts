@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test';
 import { TestStepHelper } from '../helpers/test-step-helper';
 
 const CENTERING_TOLERANCE_PX = 24;
+const LANDSCAPE_VIEWPORT = { width: 1024, height: 768 };
+const PORTRAIT_VIEWPORT = { width: 768, height: 1024 };
 
 test('MVP board selection highlights legal moves', async ({ page }, testInfo) => {
   const tester = new TestStepHelper(page, testInfo);
@@ -10,6 +12,7 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
     'Verify that selecting a pawn highlights the legal destinations on the tabletop board.'
   );
 
+  await page.setViewportSize(LANDSCAPE_VIEWPORT);
   await page.goto('/');
   await expect(page.locator('[data-app-ready="true"]')).toBeVisible();
   await page.getByRole('button', { name: /e2, White pawn/i }).click();
@@ -120,7 +123,7 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
     ]
   });
 
-  await page.setViewportSize({ width: 768, height: 1024 });
+  await page.setViewportSize(PORTRAIT_VIEWPORT);
   await expect(page.locator('[data-app-ready="true"]')).toBeVisible();
 
   await tester.step('portrait-rotated-tabletop', {
@@ -150,14 +153,16 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
             }
 
             return {
-              boardLeft: board.left,
-              boardRight: board.right,
+              boardTop: board.top,
+              boardBottom: board.bottom,
               boardWidth: board.width,
               boardHeight: board.height,
-              boardCenterX: board.left + (board.width / 2),
-              blackClockRight: blackClock.right,
-              whiteClockLeft: whiteClock.left,
-              viewportCenterX: window.innerWidth / 2
+              boardCenterY: board.top + (board.height / 2),
+              blackClockTop: blackClock.top,
+              blackClockBottom: blackClock.bottom,
+              whiteClockTop: whiteClock.top,
+              whiteClockBottom: whiteClock.bottom,
+              viewportCenterY: window.innerHeight / 2
             };
           });
 
@@ -167,9 +172,9 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
 
           expect(layout.boardWidth).toBeGreaterThan(200);
           expect(layout.boardHeight).toBeGreaterThan(200);
-          expect(layout.blackClockRight).toBeLessThan(layout.boardLeft);
-          expect(layout.whiteClockLeft).toBeGreaterThan(layout.boardRight);
-          expect(Math.abs(layout.boardCenterX - layout.viewportCenterX)).toBeLessThan(CENTERING_TOLERANCE_PX);
+          expect(layout.blackClockBottom).toBeLessThan(layout.boardTop);
+          expect(layout.whiteClockTop).toBeGreaterThan(layout.boardBottom);
+          expect(Math.abs(layout.boardCenterY - layout.viewportCenterY)).toBeLessThan(CENTERING_TOLERANCE_PX);
         }
       },
       {

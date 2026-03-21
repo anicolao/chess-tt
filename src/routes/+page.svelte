@@ -149,6 +149,7 @@
 
 <style>
   .tabletop-shell {
+    position: relative;
     display: grid;
     place-items: center;
     width: 100vw;
@@ -267,28 +268,31 @@
 
   @media (orientation: portrait) {
     .tabletop-app {
-      width: 100vw;
-      max-width: 100vw;
-      height: 100dvh;
-      padding: 0.6rem;
-      gap: 0.6rem;
-      grid-template-columns: minmax(5.75rem, 8rem) minmax(0, 1fr) minmax(5.75rem, 8rem);
+      /* Keep the rotated portrait tabletop capped to the same 100rem max width as landscape before rotation. */
+      --portrait-tabletop-width: min(100dvh, 100rem);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: var(--portrait-tabletop-width);
+      max-width: 100dvh;
+      height: 100vw;
+      transform: translate(-50%, -50%) rotate(90deg);
+      transform-origin: center center;
     }
 
-    .clock-slot-black,
+    .clock-slot-black {
+      align-content: start;
+      padding-block: 1.6rem 0.7rem;
+    }
+
     .clock-slot-white {
-      align-content: center;
-      padding: 0;
-    }
-
-    .play-area {
-      align-content: center;
+      align-content: end;
+      padding-block: 0.7rem 1.6rem;
     }
 
     .board-frame {
-      padding: 1.2rem 1.35rem;
-      transform: rotate(90deg);
-      transform-origin: center center;
+      /* Mirror the landscape board-frame padding so the portrait render is a direct 90° rotation of landscape. */
+      padding: 1.2rem 1.4rem;
     }
   }
 </style>
