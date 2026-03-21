@@ -285,18 +285,24 @@ function advanceTimerAfterMove(timerState, timerSettings, movingColor, nextTurn,
     return normalizeClockState(timerState, timerSettings, nextTurn, status, true);
   }
 
+  const nextSeats = {
+    ...timerState.seats,
+    [movingSeat]: {
+      // Only award increment when the moving seat's clock was actually running.
+      remainingMs: timerState.seats[movingSeat].remainingMs + (
+        timerState.activeSeat === movingSeat ? getIncrementMs(timerSettings, movingSeat) : 0
+      )
+    }
+  };
+
   return {
     ...normalizeClockState(timerState, timerSettings, nextTurn, status, true),
     activeSeat: nextActiveSeat,
     lastUpdatedAt: nextActiveSeat && typeof now === 'number' ? now : null,
-    seats: {
-      ...timerState.seats,
-      [movingSeat]: {
-        // Only award increment when the moving seat's clock was actually running.
-        remainingMs: timerState.seats[movingSeat].remainingMs + (
-          timerState.activeSeat === movingSeat ? getIncrementMs(timerSettings, movingSeat) : 0
-        )
-      }
+    seats: nextSeats,
+    turnStartSeats: {
+      top: { ...nextSeats.top },
+      bottom: { ...nextSeats.bottom }
     }
   };
 }
@@ -605,19 +611,40 @@ const gameSlice = createSlice({
     },
     undoRequested(state, action) {
       const now = action.payload?.now;
-      const timedState = applySynchronizedTimer(state, now);
-      const events = exportEvents(timedState).filter((event, index) => index > 0);
+      const events = exportEvents(state).filter((event, index) => index > 0);
 
       if (events.length === 0) {
-        return timedState;
+        return state;
       }
 
       const nextEvents = [{ type: 'game.started' }, ...events.slice(0, -1)];
-      return rebuildGameState(nextEvents, {
-        timerSettings: timedState.timerSettings,
-        timerState: timedState.timerState,
+      const nextState = rebuildGameState(nextEvents, {
+        timerSettings: state.timerSettings,
         now
       });
+      const clockArmed = nextState.history.length > 0;
+      const activeSeat = nextState.status === 'active' && clockArmed && !isNoClockTimeSettings(state.timerSettings)
+        ? getSeatForColor(state.timerSettings.seatColors, nextState.turn)
+        : null;
+      const restoredTurnStartSeats = {
+        top: {
+          remainingMs: state.timerState.turnStartSeats?.top?.remainingMs ?? state.timerState.seats.top.remainingMs
+        },
+        bottom: {
+          remainingMs: state.timerState.turnStartSeats?.bottom?.remainingMs ?? state.timerState.seats.bottom.remainingMs
+        }
+      };
+
+      return {
+        ...nextState,
+        timerState: {
+          ...normalizeClockState(state.timerState, state.timerSettings, nextState.turn, nextState.status, clockArmed),
+          seats: restoredTurnStartSeats,
+          activeSeat,
+          lastUpdatedAt: activeSeat && typeof now === 'number' ? now : null,
+          turnStartSeats: restoredTurnStartSeats
+        }
+      };
     },
     resignRequested(state, action) {
       const now = action.payload?.now;

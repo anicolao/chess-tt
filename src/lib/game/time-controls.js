@@ -164,17 +164,22 @@ export function isNoClockTimeSettings(timeSettings) {
 export function createInitialClockState(timeSettings, turn = 'w', status = 'active', now = null, clockArmed = false) {
   const normalizedSettings = normalizeTimeSettings(timeSettings);
   const activeSeat = status === 'active' && clockArmed ? getSeatForColor(normalizedSettings.seatColors, turn) : null;
+  const seats = {
+    top: {
+      remainingMs: normalizedSettings.seats.top.initialMinutes * MINUTE_MS
+    },
+    bottom: {
+      remainingMs: normalizedSettings.seats.bottom.initialMinutes * MINUTE_MS
+    }
+  };
 
   return {
     activeSeat,
     lastUpdatedAt: activeSeat && typeof now === 'number' ? now : null,
-    seats: {
-      top: {
-        remainingMs: normalizedSettings.seats.top.initialMinutes * MINUTE_MS
-      },
-      bottom: {
-        remainingMs: normalizedSettings.seats.bottom.initialMinutes * MINUTE_MS
-      }
+    seats,
+    turnStartSeats: {
+      top: { ...seats.top },
+      bottom: { ...seats.bottom }
     }
   };
 }
@@ -195,6 +200,20 @@ export function normalizeClockState(clockState, timeSettings, turn = 'w', status
       },
       bottom: {
         remainingMs: clampWholeNumber(clockState?.seats?.bottom?.remainingMs, defaults.seats.bottom.remainingMs)
+      }
+    },
+    turnStartSeats: {
+      top: {
+        remainingMs: clampWholeNumber(
+          clockState?.turnStartSeats?.top?.remainingMs,
+          clockState?.seats?.top?.remainingMs ?? defaults.turnStartSeats.top.remainingMs
+        )
+      },
+      bottom: {
+        remainingMs: clampWholeNumber(
+          clockState?.turnStartSeats?.bottom?.remainingMs,
+          clockState?.seats?.bottom?.remainingMs ?? defaults.turnStartSeats.bottom.remainingMs
+        )
       }
     }
   };

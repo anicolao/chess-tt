@@ -49,6 +49,33 @@ describe('game reducer', () => {
     expect(undoneState.events.map((event) => event.type)).toEqual(['game.started', 'move.played']);
   });
 
+  test('undo restores the current player clock and resumes the previous player clock', () => {
+    let state = gameReducer(undefined, gameActions.squarePressed({ square: 'e2', now: 1000 }));
+    state = gameReducer(state, gameActions.squarePressed({ square: 'e4', now: 4000 }));
+    state = gameReducer(state, gameActions.squarePressed({ square: 'e7', now: 4000 }));
+    state = gameReducer(state, gameActions.squarePressed({ square: 'e5', now: 9000 }));
+
+    expect(state.turn).toBe('w');
+    expect(state.timerState.activeSeat).toBe('bottom');
+    expect(state.timerState.seats.top.remainingMs).toBe(905000);
+    expect(state.timerState.seats.bottom.remainingMs).toBe(900000);
+
+    state = gameReducer(state, gameActions.clockTicked(12000));
+
+    expect(state.timerState.activeSeat).toBe('bottom');
+    expect(state.timerState.seats.top.remainingMs).toBe(905000);
+    expect(state.timerState.seats.bottom.remainingMs).toBe(897000);
+
+    state = gameReducer(state, gameActions.undoRequested({ now: 12000 }));
+
+    expect(state.turn).toBe('b');
+    expect(state.currentFen).toContain('4P3');
+    expect(state.timerState.activeSeat).toBe('top');
+    expect(state.timerState.lastUpdatedAt).toBe(12000);
+    expect(state.timerState.seats.top.remainingMs).toBe(905000);
+    expect(state.timerState.seats.bottom.remainingMs).toBe(900000);
+  });
+
   test('records resignation and supports hydration from persisted events', () => {
     const resignedState = reduce([
       gameActions.squarePressed('f2'),
