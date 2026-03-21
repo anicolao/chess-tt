@@ -4,7 +4,6 @@
   import Board from '$lib/components/Board.svelte';
   import GameInfo from '$lib/components/GameInfo.svelte';
   import SettingsDialog from '$lib/components/SettingsDialog.svelte';
-  import { getSeatForColor } from '$lib/game/time-controls';
   import { getBoardRows } from '$lib/game/chess-game';
   import { appStore, gameActions, gameState } from '$lib/redux/store';
 
@@ -36,7 +35,7 @@
   $: canResign = state.status === 'active';
   $: topSeatColor = state.timerSettings.seatColors.top;
   $: bottomSeatColor = state.timerSettings.seatColors.bottom;
-  $: activeSeat = getSeatForColor(state.timerSettings.seatColors, state.turn);
+  $: activeSeat = state.timerState.activeSeat;
 
   function toggleSettings(corner) {
     activeSettingsCorner = activeSettingsCorner === corner ? null : corner;
@@ -145,7 +144,7 @@
   .tabletop-app {
     display: grid;
     gap: 0.7rem;
-    width: 100%;
+    width: min(100vw, 100rem);
     max-width: 100rem;
     margin: 0 auto;
     padding: 0.75rem;
@@ -229,7 +228,9 @@
     .tabletop-app {
       align-items: stretch;
       gap: 1rem;
-      padding: 0.6rem 1rem;
+      width: 100vw;
+      max-width: 100vw;
+      padding: 0.6rem 0.75rem;
       grid-template-columns: minmax(8.5rem, 12rem) minmax(0, 1fr) minmax(8.5rem, 12rem);
       grid-template-rows: minmax(0, 1fr);
     }

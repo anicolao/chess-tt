@@ -17,7 +17,7 @@ describe('game reducer', () => {
     expect(state.events.map((event) => event.type)).toEqual(['game.started']);
     expect(state.timerSettings.seats.top.initialMinutes).toBe(15);
     expect(state.timerSettings.seats.bottom.initialMinutes).toBe(15);
-    expect(state.timerState.activeSeat).toBe('bottom');
+    expect(state.timerState.activeSeat).toBeNull();
   });
 
   test('selects a piece and highlights legal moves', () => {
@@ -104,18 +104,21 @@ describe('game reducer', () => {
     expect(state.timerSettings.presetId).toBe('custom');
     expect(state.timerState.seats.top.remainingMs).toBe(900000);
     expect(state.timerState.seats.bottom.remainingMs).toBe(180000);
-    expect(state.timerState.activeSeat).toBe('bottom');
+    expect(state.timerState.activeSeat).toBeNull();
   });
 
-  test('switches the active seat and applies increment after a move', () => {
+  test('starts the opposing clock after white completes the first move', () => {
     let state = gameReducer(undefined, gameActions.clockTicked(1000));
+
+    expect(state.timerState.activeSeat).toBeNull();
+    expect(state.timerState.seats.bottom.remainingMs).toBe(900000);
 
     state = gameReducer(state, gameActions.squarePressed({ square: 'e2', now: 1000 }));
     state = gameReducer(state, gameActions.squarePressed({ square: 'e4', now: 4000 }));
 
     expect(state.turn).toBe('b');
     expect(state.timerState.activeSeat).toBe('top');
-    expect(state.timerState.seats.bottom.remainingMs).toBe(907000);
+    expect(state.timerState.seats.bottom.remainingMs).toBe(900000);
     expect(state.timerState.seats.top.remainingMs).toBe(900000);
   });
 
@@ -128,12 +131,14 @@ describe('game reducer', () => {
       now: 0
     }));
 
-    state = gameReducer(state, gameActions.clockTicked(61000));
+    state = gameReducer(state, gameActions.squarePressed({ square: 'e2', now: 0 }));
+    state = gameReducer(state, gameActions.squarePressed({ square: 'e4', now: 0 }));
+    state = gameReducer(state, gameActions.clockTicked(121000));
 
     expect(state.status).toBe('timeout');
-    expect(state.winner).toBe('black');
-    expect(state.message).toBe('Black wins on time');
+    expect(state.winner).toBe('white');
+    expect(state.message).toBe('White wins on time');
     expect(state.timerState.activeSeat).toBeNull();
-    expect(state.timerState.seats.bottom.remainingMs).toBe(0);
+    expect(state.timerState.seats.top.remainingMs).toBe(0);
   });
 });

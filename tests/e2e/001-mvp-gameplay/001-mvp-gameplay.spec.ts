@@ -75,12 +75,15 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
             }
 
             return {
+              blackLeft: blackClock.left,
               boardLeft: board.left,
               boardRight: board.right,
               boardCenter: board.left + (board.width / 2),
               blackRight: blackClock.right,
+              whiteRight: whiteClock.right,
               whiteLeft: whiteClock.left,
-              viewportCenter: window.innerWidth / 2
+              viewportCenter: window.innerWidth / 2,
+              viewportWidth: window.innerWidth
             };
           });
 
@@ -88,8 +91,10 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
             throw new Error('Expected landscape layout metrics for both clocks and the board.');
           }
 
+          expect(layout.blackLeft).toBeGreaterThanOrEqual(0);
           expect(layout.blackRight).toBeLessThan(layout.boardLeft);
           expect(layout.whiteLeft).toBeGreaterThan(layout.boardRight);
+          expect(layout.whiteRight).toBeLessThanOrEqual(layout.viewportWidth);
           expect(Math.abs(layout.boardCenter - layout.viewportCenter)).toBeLessThan(CENTERING_TOLERANCE_PX);
         }
       }
