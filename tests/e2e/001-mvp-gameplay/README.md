@@ -22,4 +22,5 @@ Verify that selecting a pawn highlights the legal destinations on the tabletop b
 ### Verifications
 - [x] The rotated portrait layout still fits the viewport without scrolling
 - [x] The board stays centered while the player clocks move above and below it on-screen
+- [x] Both player settings buttons stay visible after the portrait rotation
 

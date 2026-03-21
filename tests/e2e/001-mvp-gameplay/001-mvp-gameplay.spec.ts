@@ -153,6 +153,13 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
           expect(layout.bottomSettingsTop).toBeGreaterThan(layout.boardBottom);
           expect(Math.abs(layout.boardCenterX - layout.viewportCenterX)).toBeLessThan(CENTERING_TOLERANCE_PX);
         }
+      },
+      {
+        spec: 'Both player settings buttons stay visible after the portrait rotation',
+        check: async () => {
+          await expect(page.getByRole('button', { name: /Open top seat settings/i })).toBeVisible();
+          await expect(page.getByRole('button', { name: /Open bottom seat settings/i })).toBeVisible();
+        }
       }
     ]
   });
