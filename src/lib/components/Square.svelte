@@ -30,6 +30,7 @@
       symbol={symbol}
       label={pieceLabel}
       color={piece?.color}
+      type={piece?.type}
     />
   {/if}
   {#if isHighlighted}
