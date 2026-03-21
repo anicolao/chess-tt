@@ -35,6 +35,8 @@ tests/e2e/
 │       └── 001-piece-moved.png
 ```
 
+The generated `README.md` and every screenshot under `screenshots/` are part of the committed test artifact set. If you add a new scenario or change an existing scenario's visible behavior, you must regenerate those files and commit them with the test change so reviewers can validate the flow from the repository alone.
+
 ### Basic Usage
 
 ```typescript
@@ -66,6 +68,8 @@ The `TestStepHelper` must automatically:
 2. **Wait for Animations**: Call `waitForAnimations(page)` before taking a screenshot.
 3. **Run Verifications**: Execute all checks and fail the test if any fail.
 4. **Generate README**: Append the step results to the scenario's documentation.
+
+After running the scenario, commit the regenerated `README.md` and screenshot outputs for that scenario instead of reverting them locally.
 
 ## 5. Handling Dynamic Content
 

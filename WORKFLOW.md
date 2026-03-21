@@ -26,9 +26,10 @@ All contributors (human and AI) must adhere to the following workflow when execu
 6. **Testing & Validation**:
    - **Unit Tests**: All core logic, especially event sourcing and redux reducers, must have comprehensive unit tests.
    - **E2E Tests**: See `E2E_GUIDE.md`. Playwright tests are mandatory for all features and bug fixes.
+   - **Committed E2E Artifacts**: When a new E2E scenario is added or an existing one gains new visual coverage, commit the regenerated scenario `README.md` and screenshot artifacts with the code change.
    - **Husky Hooks**: The project uses Husky to enforce test passing.
-     - **Pre-commit**: Enforces that all unit tests pass before a commit can be created.
-     - **Pre-push**: Enforces that the full test suite (including E2E Playwright tests) passes before pushing to GitHub.
+      - **Pre-commit**: Enforces that all unit tests pass before a commit can be created.
+      - **Pre-push**: Enforces that the full test suite (including E2E Playwright tests) passes before pushing to GitHub.
    - Validation is mandatory for task completion.
 
 7. **No Reverts**:
