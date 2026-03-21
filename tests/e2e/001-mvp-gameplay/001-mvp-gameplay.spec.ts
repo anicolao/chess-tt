@@ -74,6 +74,8 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
               bottomHOffset: Math.abs(centerX(bottomH) - centerX(h1)),
               left8Offset: Math.abs(centerY(left8) - centerY(a8)),
               right1Offset: Math.abs(centerY(right1) - centerY(h1)),
+              topAGap: a8.top - topA.bottom,
+              bottomHGap: bottomH.top - h1.bottom,
               left8Gap: a8.left - left8.right,
               right1Gap: right1.left - h1.right,
               topInsideBoard: topA.bottom <= a8.top,
@@ -88,6 +90,8 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
           expect(alignment?.bottomHOffset).toBeLessThan(COORDINATE_ALIGNMENT_TOLERANCE_PX);
           expect(alignment?.left8Offset).toBeLessThan(COORDINATE_ALIGNMENT_TOLERANCE_PX);
           expect(alignment?.right1Offset).toBeLessThan(COORDINATE_ALIGNMENT_TOLERANCE_PX);
+          expect(alignment?.topAGap).toBeGreaterThanOrEqual(COORDINATE_EDGE_PADDING_MIN_PX);
+          expect(alignment?.bottomHGap).toBeGreaterThanOrEqual(COORDINATE_EDGE_PADDING_MIN_PX);
           expect(alignment?.left8Gap).toBeGreaterThanOrEqual(COORDINATE_EDGE_PADDING_MIN_PX);
           expect(alignment?.right1Gap).toBeGreaterThanOrEqual(COORDINATE_EDGE_PADDING_MIN_PX);
           expect(alignment?.topInsideBoard).toBe(true);
