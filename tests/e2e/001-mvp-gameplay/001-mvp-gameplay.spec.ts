@@ -51,11 +51,23 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
         }
       },
       {
-        spec: 'Pieces use the flat direct-on-board rendering style',
+        spec: 'Pieces use the requested Wikimedia SVG rendering',
         check: async () => {
-          await expect(page.locator('[data-square="e2"] [data-piece-style="flat-glyph"]')).toBeVisible();
-          await expect(page.locator('[data-square="d7"] [data-piece-style="flat-glyph"]')).toBeVisible();
+          const whitePiece = page.locator('[data-square="e2"] [data-piece-style="wikimedia-svg"]');
+          const blackPiece = page.locator('[data-square="d7"] [data-piece-style="wikimedia-svg"]');
+
+          await expect(whitePiece).toBeVisible();
+          await expect(blackPiece).toBeVisible();
+          await expect(page.locator('[data-piece-style="flat-glyph"]')).toHaveCount(0);
           await expect(page.locator('[data-piece-style="engraved-glyph"]')).toHaveCount(0);
+          await expect(whitePiece).toHaveAttribute(
+            'data-piece-src',
+            'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg'
+          );
+          await expect(blackPiece).toHaveAttribute(
+            'data-piece-src',
+            'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg'
+          );
         }
       },
       {
