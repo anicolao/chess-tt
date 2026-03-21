@@ -1,6 +1,8 @@
 <script>
   import { formatClock, formatTimeControl, getColorName } from '$lib/game/time-controls';
 
+  const NO_CLOCK_DISPLAY = '-:-';
+
   export let seat = 'bottom';
   export let assignedColor = 'w';
   export let remainingMs = 0;
@@ -11,7 +13,8 @@
   export let position = 'stacked';
 
   $: colorLabel = getColorName(assignedColor);
-  $: clockLabel = formatClock(remainingMs);
+  $: hasClock = !(timeControl?.initialMinutes === 0 && timeControl?.incrementSeconds === 0);
+  $: clockLabel = hasClock ? formatClock(remainingMs) : NO_CLOCK_DISPLAY;
   $: timeControlLabel = formatTimeControl(timeControl);
   $: statusLabel = status === 'active'
     ? (isActive ? 'Your move' : 'Waiting')

@@ -2,6 +2,7 @@ const MINUTE_MS = 60_000;
 const SECOND_MS = 1_000;
 
 export const CUSTOM_TIME_CONTROL_PRESET_ID = 'custom';
+export const NO_CLOCK_TIME_CONTROL_PRESET_ID = 'no-clock';
 export const DEFAULT_SEAT_COLORS = {
   top: 'b',
   bottom: 'w'
@@ -9,38 +10,64 @@ export const DEFAULT_SEAT_COLORS = {
 
 export const TIME_CONTROL_PRESETS = [
   {
-    id: 'classical-15-10',
-    label: 'Classical · 15 | 10',
-    seats: {
-      top: { initialMinutes: 15, incrementSeconds: 10 },
-      bottom: { initialMinutes: 15, incrementSeconds: 10 }
-    }
-  },
-  {
-    id: 'rapid-5-3',
-    label: 'Rapid · 5 | 3',
-    seats: {
-      top: { initialMinutes: 5, incrementSeconds: 3 },
-      bottom: { initialMinutes: 5, incrementSeconds: 3 }
-    }
-  },
-  {
-    id: 'speed-2-12',
-    label: 'Speed · 2 | 12',
+    id: 'blitz-2-12',
+    label: 'Blitz · 2 | 12',
     seats: {
       top: { initialMinutes: 2, incrementSeconds: 12 },
       bottom: { initialMinutes: 2, incrementSeconds: 12 }
     }
   },
   {
-    id: 'standard-10-0',
-    label: 'Standard · 10 | 0',
+    id: 'blitz-5-3',
+    label: 'Blitz · 5 | 3',
     seats: {
-      top: { initialMinutes: 10, incrementSeconds: 0 },
-      bottom: { initialMinutes: 10, incrementSeconds: 0 }
+      top: { initialMinutes: 5, incrementSeconds: 3 },
+      bottom: { initialMinutes: 5, incrementSeconds: 3 }
+    }
+  },
+  {
+    id: 'rapid-10-10',
+    label: 'Rapid · 10 | 10',
+    seats: {
+      top: { initialMinutes: 10, incrementSeconds: 10 },
+      bottom: { initialMinutes: 10, incrementSeconds: 10 }
+    }
+  },
+  {
+    id: 'rapid-15-10',
+    label: 'Rapid · 15 | 10',
+    seats: {
+      top: { initialMinutes: 15, incrementSeconds: 10 },
+      bottom: { initialMinutes: 15, incrementSeconds: 10 }
+    }
+  },
+  {
+    id: 'classic-30-20',
+    label: 'Classic · 30 | 20',
+    seats: {
+      top: { initialMinutes: 30, incrementSeconds: 20 },
+      bottom: { initialMinutes: 30, incrementSeconds: 20 }
+    }
+  },
+  {
+    id: 'classic-60-0',
+    label: 'Classic · 60 | 0',
+    seats: {
+      top: { initialMinutes: 60, incrementSeconds: 0 },
+      bottom: { initialMinutes: 60, incrementSeconds: 0 }
+    }
+  },
+  {
+    id: NO_CLOCK_TIME_CONTROL_PRESET_ID,
+    label: 'No Clock',
+    seats: {
+      top: { initialMinutes: 0, incrementSeconds: 0 },
+      bottom: { initialMinutes: 0, incrementSeconds: 0 }
     }
   }
 ];
+
+const DEFAULT_TIME_CONTROL_PRESET_ID = 'rapid-15-10';
 
 function clampWholeNumber(value, fallback) {
   const parsed = Number.parseInt(String(value ?? ''), 10);
@@ -71,7 +98,7 @@ export function getColorForSeat(seatColors, seat) {
 }
 
 export function createDefaultTimeSettings() {
-  const preset = TIME_CONTROL_PRESETS[0];
+  const preset = TIME_CONTROL_PRESETS.find(({ id }) => id === DEFAULT_TIME_CONTROL_PRESET_ID) ?? TIME_CONTROL_PRESETS[0];
   return {
     presetId: preset.id,
     seatColors: { ...DEFAULT_SEAT_COLORS },
@@ -121,6 +148,17 @@ export function normalizeTimeSettings(settings = {}) {
     seatColors,
     seats
   };
+}
+
+export function isNoClockTimeSettings(timeSettings) {
+  const normalizedSettings = normalizeTimeSettings(timeSettings);
+
+  return (
+    normalizedSettings.seats.top.initialMinutes === 0 &&
+    normalizedSettings.seats.top.incrementSeconds === 0 &&
+    normalizedSettings.seats.bottom.initialMinutes === 0 &&
+    normalizedSettings.seats.bottom.incrementSeconds === 0
+  );
 }
 
 export function createInitialClockState(timeSettings, turn = 'w', status = 'active', now = null, clockArmed = false) {
@@ -176,6 +214,10 @@ export function formatClock(remainingMs) {
 }
 
 export function formatTimeControl(control) {
+  if (control?.initialMinutes === 0 && control?.incrementSeconds === 0) {
+    return 'No Clock';
+  }
+
   return `${control.initialMinutes} | ${control.incrementSeconds}`;
 }
 
