@@ -3,7 +3,7 @@ import { TestStepHelper } from '../helpers/test-step-helper';
 
 const CENTERING_TOLERANCE_PX = 24;
 const COORDINATE_ALIGNMENT_TOLERANCE_PX = 2;
-const COORDINATE_EDGE_PADDING_MIN_PX = 1;
+const COORDINATE_EDGE_PADDING_MIN_PX = 4;
 const LANDSCAPE_VIEWPORT = { width: 1024, height: 768 };
 const PORTRAIT_VIEWPORT = { width: 768, height: 1024 };
 
