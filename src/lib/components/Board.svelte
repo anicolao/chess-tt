@@ -24,8 +24,8 @@
     --landscape-board-height-offset: 4.5rem;
     /* Combined width reserved for both side clock rails, page padding, and inter-column gaps. */
     --landscape-board-width-offset: 28rem;
-    /* Combined horizontal space reserved for portrait padding and the player-relative gear buttons. */
-    --portrait-board-width-offset: 5rem;
+    /* Combined horizontal space reserved for portrait side clocks, padding, and the player-relative gear buttons. */
+    --portrait-board-width-offset: 17rem;
     width: fit-content;
     max-width: 100%;
     padding: 0.85rem;

@@ -147,4 +147,44 @@
       line-height: 1.35;
     }
   }
+
+  @media (orientation: portrait) {
+    .clock.side {
+      width: 100%;
+      min-height: 0;
+      padding: 0.8rem 0.4rem;
+      border-radius: 1.65rem;
+      background:
+        linear-gradient(180deg, rgba(15, 23, 32, 0.82), rgba(11, 18, 26, 0.56)),
+        rgba(11, 18, 26, 0.56);
+      align-content: center;
+      justify-items: center;
+      grid-template-rows: auto auto auto;
+      gap: 0.4rem;
+      transform-origin: center center;
+    }
+
+    .clock.side.left {
+      align-self: center;
+      transform: rotate(-90deg);
+    }
+
+    .clock.side.right {
+      align-self: center;
+      transform: rotate(90deg);
+    }
+
+    .clock.side .time-face {
+      min-width: auto;
+      font-size: clamp(2rem, 3.2vh, 2.9rem);
+      letter-spacing: 0.04em;
+    }
+
+    .clock.side .status-label,
+    .clock.side .assignment-label {
+      font-size: 0.7rem;
+      line-height: 1.25;
+      text-align: center;
+    }
+  }
 </style>

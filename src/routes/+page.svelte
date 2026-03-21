@@ -268,37 +268,27 @@
   @media (orientation: portrait) {
     .tabletop-app {
       width: 100vw;
+      max-width: 100vw;
       height: 100dvh;
-      padding: 0.75rem;
-      grid-template-columns: minmax(0, 1fr);
-      grid-template-rows: auto minmax(0, 1fr) auto;
-      gap: 0.75rem;
+      padding: 0.6rem;
+      gap: 0.6rem;
+      grid-template-columns: minmax(5.75rem, 8rem) minmax(0, 1fr) minmax(5.75rem, 8rem);
     }
 
     .clock-slot-black,
-    .clock-slot-white,
-    .play-area {
-      grid-column: 1;
-    }
-
-    .clock-slot-black {
-      grid-row: 1;
-      align-content: start;
-    }
-
-    .play-area {
-      grid-row: 2;
-    }
-
     .clock-slot-white {
-      grid-row: 3;
-      align-content: end;
+      align-content: center;
+      padding: 0;
+    }
+
+    .play-area {
+      align-content: center;
     }
 
     .board-frame {
-      width: 100%;
-      height: 100%;
-      padding: 0.5rem 2.2rem;
+      padding: 1.2rem 1.35rem;
+      transform: rotate(90deg);
+      transform-origin: center center;
     }
   }
 </style>
