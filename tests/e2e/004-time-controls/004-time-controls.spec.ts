@@ -27,12 +27,41 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
     description: 'Board theme presets and custom colours can be selected from settings',
     verifications: [
       {
-        spec: 'The preset row is rendered at the top of the settings dialog with three presets and a custom entry',
+        spec: 'The board colour presets sit below the dialog heading and above the time controls',
         check: async () => {
           await expect(page.getByRole('button', { name: 'Current board colours' })).toBeVisible();
           await expect(page.getByRole('button', { name: 'Green board colours' })).toBeVisible();
           await expect(page.getByRole('button', { name: 'Brown board colours' })).toBeVisible();
           await expect(page.getByRole('button', { name: 'Custom board colours' })).toBeVisible();
+          const layout = await page.evaluate(() => {
+            const header = document.querySelector('.settings-dialog .header');
+            const boardTheme = document.querySelector('.settings-dialog [aria-label="Board colours"]');
+            const timeControls = document.querySelector('.settings-dialog [aria-label="Time controls"]');
+
+            if (!(header instanceof HTMLElement) || !(boardTheme instanceof HTMLElement) || !(timeControls instanceof HTMLElement)) {
+              return null;
+            }
+
+            const headerBox = header.getBoundingClientRect();
+            const boardThemeBox = boardTheme.getBoundingClientRect();
+            const timeControlsBox = timeControls.getBoundingClientRect();
+
+            return {
+              headerBeforeBoardTheme: Boolean(header.compareDocumentPosition(boardTheme) & window.Node.DOCUMENT_POSITION_FOLLOWING),
+              boardThemeBeforeTimeControls: Boolean(
+                boardTheme.compareDocumentPosition(timeControls) & window.Node.DOCUMENT_POSITION_FOLLOWING
+              ),
+              boardThemeBelowHeader: boardThemeBox.top >= headerBox.bottom,
+              boardThemeAboveTimeControls: boardThemeBox.bottom <= timeControlsBox.top
+            };
+          });
+
+          expect(layout).toEqual({
+            headerBeforeBoardTheme: true,
+            boardThemeBeforeTimeControls: true,
+            boardThemeBelowHeader: true,
+            boardThemeAboveTimeControls: true
+          });
         }
       },
       {
@@ -141,6 +170,22 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
           await expect(
             page.getByRole('group', { name: "Opponent's Clock" }).getByRole('spinbutton', { name: 'Minutes' })
           ).toHaveValue('14');
+        }
+      },
+      {
+        spec: 'The selected custom board colours persist after a move is played',
+        check: async () => {
+          await expect(page.locator('.board-shell')).toHaveAttribute('style', /#334455/i);
+          await expect(page.locator('.board-shell')).toHaveAttribute('style', /#112233/i);
+          await expect.poll(async () => page.evaluate(() => {
+            const darkSquare = getComputedStyle(document.querySelector('[data-square="a8"]') as Element).backgroundColor;
+            const lightSquare = getComputedStyle(document.querySelector('[data-square="b8"]') as Element).backgroundColor;
+
+            return { darkSquare, lightSquare };
+          })).toEqual({
+            darkSquare: 'rgb(17, 34, 51)',
+            lightSquare: 'rgb(51, 68, 85)'
+          });
         }
       }
     ]

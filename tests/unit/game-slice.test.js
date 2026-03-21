@@ -153,6 +153,26 @@ describe('game reducer', () => {
     expect(state.timerSettings.presetId).toBe('rapid-15-10');
   });
 
+  test('keeps board colours after a move is played', () => {
+    let state = gameReducer(undefined, gameActions.boardThemeConfigured({
+      palette: {
+        lightSquare: '#334455',
+        darkSquare: '#112233'
+      }
+    }));
+
+    state = gameReducer(state, gameActions.squarePressed('e2'));
+    state = gameReducer(state, gameActions.squarePressed('e4'));
+
+    expect(state.boardThemeSettings).toEqual({
+      presetId: 'custom',
+      palette: {
+        lightSquare: '#334455',
+        darkSquare: '#112233'
+      }
+    });
+  });
+
   test('starts the opposing clock after white completes the first move', () => {
     let state = gameReducer(undefined, gameActions.clockTicked(1000));
 

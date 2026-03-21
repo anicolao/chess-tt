@@ -7,7 +7,7 @@ Verify that seat-based presets and custom time controls can be configured from s
 ![Board theme presets and custom colours can be selected from settings](./screenshots/000-board-theme-presets.png)
 
 ### Verifications
-- [x] The preset row is rendered at the top of the settings dialog with three presets and a custom entry
+- [x] The board colour presets sit below the dialog heading and above the time controls
 - [x] Selecting the green preset updates the live board square colours immediately
 
 ## Custom seat times are applied independently
@@ -28,4 +28,5 @@ Verify that seat-based presets and custom time controls can be configured from s
 - [x] The moving bottom seat keeps its full time and waits after the opening move
 - [x] The top seat becomes active and begins counting down only after White completes move one
 - [x] The in-progress top seat minute edit is preserved while the live clock is running
+- [x] The selected custom board colours persist after a move is played
 

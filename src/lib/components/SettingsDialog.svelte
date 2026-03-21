@@ -178,7 +178,21 @@
   aria-label="Game settings"
   data-settings-corner={corner}
 >
+  <div class="header">
+    <div>
+      <p class="eyebrow">Game settings</p>
+      <h2>{status === 'active' ? 'Table view' : 'Match complete'}</h2>
+    </div>
+    <button type="button" class="close-button" aria-label="Close settings" on:click={onClose}>✕</button>
+  </div>
+
+  <p class="message">{message}</p>
+
   <section class="board-theme-section" aria-label="Board colours">
+    <div>
+      <p class="eyebrow">Board colours</p>
+      <p class="time-help">Choose the square colours before adjusting the seat clocks.</p>
+    </div>
     <div class="board-theme-row">
       {#each BOARD_THEME_PRESETS as preset}
         <button
@@ -209,16 +223,6 @@
       </button>
     </div>
   </section>
-
-  <div class="header">
-    <div>
-      <p class="eyebrow">Game settings</p>
-      <h2>{status === 'active' ? 'Table view' : 'Match complete'}</h2>
-    </div>
-    <button type="button" class="close-button" aria-label="Close settings" on:click={onClose}>✕</button>
-  </div>
-
-  <p class="message">{message}</p>
 
   <section class="time-controls" aria-label="Time controls">
     <div class="time-controls-header">
