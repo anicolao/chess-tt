@@ -7,7 +7,10 @@
   import { getBoardRows } from '$lib/game/chess-game';
   import { appStore, gameActions, gameState } from '$lib/redux/store';
 
-  const settingsCorners = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+  const playerSettingsAnchors = [
+    { seat: 'top', corner: 'top-left' },
+    { seat: 'bottom', corner: 'bottom-right' }
+  ];
   const dispatch = (action) => appStore.dispatch(action);
   // This flips after hydration so interaction tests can wait on a deterministic ready marker.
   let isHydrated = false;
@@ -63,8 +66,8 @@
     }));
   }
 
-  function settingsLabel(corner) {
-    return `Open ${corner.replace(/-/g, ' ')} settings`;
+  function settingsLabel(seat) {
+    return `Open ${seat} seat settings`;
   }
 </script>
 
@@ -75,96 +78,108 @@
 
 <svelte:window on:keydown={handleKeydown} />
 
-<div class="tabletop-app" data-app-ready={isHydrated}>
-  <div class="clock-slot clock-slot-black">
-    <GameInfo
-      seat="top"
-      position="left"
-      assignedColor={topSeatColor}
-      remainingMs={state.timerState.seats.top.remainingMs}
-      timeControl={state.timerSettings.seats.top}
-      isActive={activeSeat === 'top' && state.status === 'active'}
-      status={state.status}
-      winner={state.winner}
-    />
-  </div>
-
-  <main class="play-area">
-    <div class="board-frame">
-      {#each settingsCorners as corner}
-        <button
-          type="button"
-          class:top-trigger={corner.startsWith('top')}
-          class={`settings-trigger ${corner}`}
-          aria-label={settingsLabel(corner)}
-          on:click={() => toggleSettings(corner)}
-        >
-          ⚙
-        </button>
-      {/each}
-
-      <Board rows={boardRows} onPress={(square) => dispatch(gameActions.squarePressed({ square, now: Date.now() }))} />
-
-      {#if activeSettingsCorner}
-        <SettingsDialog
-          corner={activeSettingsCorner}
-          message={state.message}
-          status={state.status}
-          winner={state.winner}
-          capturedWhite={state.captured.white}
-          capturedBlack={state.captured.black}
-          timeSettings={state.timerSettings}
-          {canUndo}
-          {canResign}
-          onClose={closeSettings}
-          onNewGame={() => dispatchAndClose(gameActions.newGameRequested({ now: Date.now() }))}
-          onUndo={() => dispatchAndClose(gameActions.undoRequested({ now: Date.now() }))}
-          onResign={() => dispatchAndClose(gameActions.resignRequested({ now: Date.now() }))}
-          onApplyTimeControls={dispatchClockSettings}
-        />
-      {/if}
+<div class="tabletop-shell" data-app-ready={isHydrated}>
+  <div class="tabletop-app">
+    <div class="clock-slot clock-slot-black">
+      <GameInfo
+        seat="top"
+        position="left"
+        assignedColor={topSeatColor}
+        remainingMs={state.timerState.seats.top.remainingMs}
+        timeControl={state.timerSettings.seats.top}
+        isActive={activeSeat === 'top' && state.status === 'active'}
+        status={state.status}
+        winner={state.winner}
+      />
     </div>
-  </main>
 
-  <div class="clock-slot clock-slot-white">
-    <GameInfo
-      seat="bottom"
-      position="right"
-      assignedColor={bottomSeatColor}
-      remainingMs={state.timerState.seats.bottom.remainingMs}
-      timeControl={state.timerSettings.seats.bottom}
-      isActive={activeSeat === 'bottom' && state.status === 'active'}
-      status={state.status}
-      winner={state.winner}
-    />
+    <main class="play-area">
+      <div class="board-frame">
+        {#each playerSettingsAnchors as control}
+          <button
+            type="button"
+            class:top-trigger={control.corner.startsWith('top')}
+            class={`settings-trigger ${control.corner}`}
+            aria-label={settingsLabel(control.seat)}
+            on:click={() => toggleSettings(control.corner)}
+          >
+            ⚙
+          </button>
+        {/each}
+
+        <Board rows={boardRows} onPress={(square) => dispatch(gameActions.squarePressed({ square, now: Date.now() }))} />
+
+        {#if activeSettingsCorner}
+          <SettingsDialog
+            corner={activeSettingsCorner}
+            message={state.message}
+            status={state.status}
+            winner={state.winner}
+            capturedWhite={state.captured.white}
+            capturedBlack={state.captured.black}
+            timeSettings={state.timerSettings}
+            {canUndo}
+            {canResign}
+            onClose={closeSettings}
+            onNewGame={() => dispatchAndClose(gameActions.newGameRequested({ now: Date.now() }))}
+            onUndo={() => dispatchAndClose(gameActions.undoRequested({ now: Date.now() }))}
+            onResign={() => dispatchAndClose(gameActions.resignRequested({ now: Date.now() }))}
+            onApplyTimeControls={dispatchClockSettings}
+          />
+        {/if}
+      </div>
+    </main>
+
+    <div class="clock-slot clock-slot-white">
+      <GameInfo
+        seat="bottom"
+        position="right"
+        assignedColor={bottomSeatColor}
+        remainingMs={state.timerState.seats.bottom.remainingMs}
+        timeControl={state.timerSettings.seats.bottom}
+        isActive={activeSeat === 'bottom' && state.status === 'active'}
+        status={state.status}
+        winner={state.winner}
+      />
+    </div>
   </div>
 </div>
 
 <style>
+  .tabletop-shell {
+    display: grid;
+    place-items: center;
+    width: 100vw;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
   .tabletop-app {
     display: grid;
-    gap: 0.7rem;
+    align-items: stretch;
+    gap: 1rem;
     width: min(100vw, 100rem);
-    max-width: 100rem;
-    margin: 0 auto;
-    padding: 0.75rem;
+    max-width: 100vw;
+    padding: 0.6rem 0.75rem;
     height: 100dvh;
-    align-content: center;
-    overflow: hidden;
-    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-columns: minmax(8.5rem, 12rem) minmax(0, 1fr) minmax(8.5rem, 12rem);
+    grid-template-rows: minmax(0, 1fr);
   }
 
   .play-area {
     display: grid;
+    grid-column: 2;
     min-width: 0;
     min-height: 0;
     justify-items: center;
     align-content: center;
-    gap: 0.5rem;
+    gap: 0;
   }
 
   .clock-slot {
+    display: grid;
     min-width: 0;
+    min-height: 0;
   }
 
   .board-frame {
@@ -198,8 +213,8 @@
     transform: rotate(180deg);
   }
 
-  .settings-trigger.top-left,
-  .settings-trigger.top-right {
+    .settings-trigger.top-left,
+    .settings-trigger.top-right {
     top: 0;
   }
 
@@ -218,6 +233,14 @@
     right: 0;
   }
 
+  .clock-slot-black {
+    grid-column: 1;
+  }
+
+  .clock-slot-white {
+    grid-column: 3;
+  }
+
   @media (min-width: 900px) {
     .tabletop-app {
       padding: 0.8rem 1.2rem;
@@ -225,38 +248,20 @@
   }
 
   @media (orientation: landscape) {
-    .tabletop-app {
-      align-items: stretch;
-      gap: 1rem;
-      width: 100vw;
-      max-width: 100vw;
-      padding: 0.6rem 0.75rem;
-      grid-template-columns: minmax(8.5rem, 12rem) minmax(0, 1fr) minmax(8.5rem, 12rem);
-      grid-template-rows: minmax(0, 1fr);
-    }
-
-    .clock-slot {
-      display: grid;
-      min-height: 0;
-    }
-
-    .clock-slot-black {
-      grid-column: 1;
-    }
-
-    .play-area {
-      grid-column: 2;
-      min-width: 0;
-      min-height: 0;
-      gap: 0;
-    }
-
-    .clock-slot-white {
-      grid-column: 3;
-    }
-
     .board-frame {
       padding: 1.2rem 1.4rem;
+    }
+  }
+
+  @media (orientation: portrait) {
+    .tabletop-app {
+      width: min(100dvh, 100rem);
+      max-width: 100dvh;
+      height: 100vw;
+      position: relative;
+      left: calc((100vw - min(100dvh, 100rem)) / 2);
+      transform: rotate(90deg);
+      transform-origin: center center;
     }
   }
 </style>

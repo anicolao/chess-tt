@@ -12,51 +12,79 @@
   aria-label={label}
   data-facing={color === 'b' ? 'top-player' : 'bottom-player'}
   data-piece-color={color}
+  data-piece-style="engraved-glyph"
 >
-  <span class="glyph" aria-hidden="true">{symbol}</span>
+  <span class="glyph glyph-shadow" aria-hidden="true">{symbol}</span>
+  <span class="glyph glyph-outline" aria-hidden="true">{symbol}</span>
+  <span class="glyph glyph-fill" aria-hidden="true">{symbol}</span>
 </span>
 
 <style>
   .piece {
-    --piece-border-radius: 1.15rem;
     position: relative;
     display: inline-grid;
     align-items: center;
     justify-content: center;
-    width: 78%;
+    width: 84%;
     aspect-ratio: 1;
-    border-radius: var(--piece-border-radius);
-    background:
-      radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.96), rgba(229, 233, 240, 0.88) 58%, rgba(196, 206, 220, 0.94));
-    box-shadow:
-      0 0.24rem 0.55rem rgba(0, 0, 0, 0.34),
-      inset 0 0.08rem 0 rgba(255, 255, 255, 0.88),
-      inset 0 -0.16rem 0 rgba(86, 99, 118, 0.24);
     touch-action: none;
     transform-origin: center;
     user-select: none;
   }
 
-  .piece.black {
-    background:
-      radial-gradient(circle at 35% 30%, rgba(111, 123, 141, 0.98), rgba(52, 62, 78, 0.96) 58%, rgba(20, 26, 37, 0.98));
-    box-shadow:
-      0 0.24rem 0.55rem rgba(0, 0, 0, 0.42),
-      inset 0 0.08rem 0 rgba(185, 198, 215, 0.16),
-      inset 0 -0.16rem 0 rgba(0, 0, 0, 0.3);
+  .piece::after {
+    content: '';
+    position: absolute;
+    inset: 56% 18% 8%;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(7, 11, 17, 0.34), transparent 72%);
+    filter: blur(0.28rem);
+    pointer-events: none;
   }
 
   .glyph {
-    color: #243142;
-    font-size: clamp(1.9rem, 4.7vw, 3.3rem);
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: 'Iowan Old Style', Charter, Georgia, 'Times New Roman', serif;
+    font-size: clamp(2.6rem, 6vw, 4.3rem);
+    font-weight: 700;
     line-height: 1;
-    transform: translateY(-1%);
-    filter: drop-shadow(0 0.08rem 0.08rem rgba(255, 255, 255, 0.3));
+    transform: translateY(3%);
+    pointer-events: none;
   }
 
-  .piece.black .glyph {
-    color: #f7f0dc;
-    filter: drop-shadow(0 0.08rem 0.08rem rgba(0, 0, 0, 0.34));
+  .glyph-shadow {
+    color: rgba(7, 11, 17, 0.28);
+    transform: translate(5%, 9%);
+  }
+
+  .glyph-outline {
+    color: #243142;
+    -webkit-text-stroke: 0.12rem #23303f;
+    text-shadow:
+      0 0.04rem 0 rgba(255, 255, 255, 0.36),
+      0 0.16rem 0.28rem rgba(0, 0, 0, 0.2);
+  }
+
+  .glyph-fill {
+    color: transparent;
+    -webkit-background-clip: text;
+    background-clip: text;
+    background: linear-gradient(180deg, #fffdf5 0%, #efe1bf 46%, #cbb27d 100%);
+  }
+
+  .piece.black .glyph-outline {
+    color: #f2e7cb;
+    -webkit-text-stroke: 0.11rem #d5c7a0;
+    text-shadow:
+      0 0.04rem 0 rgba(255, 255, 255, 0.12),
+      0 0.16rem 0.28rem rgba(0, 0, 0, 0.34);
+  }
+
+  .piece.black .glyph-fill {
+    background: linear-gradient(180deg, #5f6f84 0%, #2d3746 56%, #121923 100%);
   }
 
   .facing-top-player {
@@ -65,11 +93,11 @@
 
   @media (orientation: landscape) {
     .piece {
-      width: 80%;
+      width: 86%;
     }
 
     .glyph {
-      font-size: clamp(2.2rem, 3.7vw, 3.7rem);
+      font-size: clamp(3rem, 4.2vw, 4.7rem);
     }
   }
 </style>
