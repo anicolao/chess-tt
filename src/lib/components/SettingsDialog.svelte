@@ -17,12 +17,15 @@
   export let capturedBlack = [];
   export let canUndo = false;
   export let canResign = true;
+  export let canExport = false;
   export let timeSettings = null;
   export let onClose = () => {};
   export let onNewGame = () => {};
   export let onUndo = () => {};
   export let onResign = () => {};
   export let onApplyTimeControls = () => {};
+  export let onExportChessCom = () => {};
+  export let onExportLichess = () => {};
 
   function cloneComparableTimeSettings(settings) {
     return {
@@ -180,6 +183,17 @@
     </div>
 
     <button type="button" class="apply-button" on:click={applyTimeControls}>Apply clock settings</button>
+  </section>
+
+  <section class="export-controls" aria-label="Export game">
+    <div>
+      <p class="eyebrow">Export game</p>
+      <p class="time-help">Generate a QR code that opens the current game on your phone.</p>
+    </div>
+    <div class="export-button-grid">
+      <button type="button" disabled={!canExport} on:click={onExportChessCom}>Export to Chess.com</button>
+      <button type="button" disabled={!canExport} on:click={onExportLichess}>Export to Lichess</button>
+    </div>
   </section>
 
   <dl class="summary">
@@ -352,6 +366,14 @@
     background: rgba(255, 255, 255, 0.04);
   }
 
+  .export-controls {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.9rem;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
   .time-controls-header {
     display: grid;
     gap: 0.6rem;
@@ -423,6 +445,24 @@
     font-weight: 700;
   }
 
+  .export-button-grid {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .export-button-grid button {
+    min-height: 3rem;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #f5f7fa;
+    font-weight: 700;
+  }
+
+  .export-button-grid button:disabled {
+    opacity: 0.46;
+  }
+
   .captured-row {
     display: flex;
     min-height: 1.75rem;
@@ -448,6 +488,10 @@
     .seat-control-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       align-items: start;
+    }
+
+    .export-button-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     .captures {
