@@ -1,4 +1,5 @@
 <script>
+  import { normalizeBoardThemeSettings } from '$lib/game/board-themes';
   import Square from '$lib/components/Square.svelte';
 
   const FILE_COORDINATES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
@@ -8,9 +9,10 @@
   export let onPress = () => {};
   export let palette = null;
 
+  $: normalizedPalette = normalizeBoardThemeSettings({ palette }).palette;
   $: boardStyle = [
-    palette?.lightSquare ? `--board-light-square: ${palette.lightSquare}` : '',
-    palette?.darkSquare ? `--board-dark-square: ${palette.darkSquare}` : ''
+    `--board-light-square: ${normalizedPalette.lightSquare}`,
+    `--board-dark-square: ${normalizedPalette.darkSquare}`
   ].filter(Boolean).join('; ');
 </script>
 
