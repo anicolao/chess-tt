@@ -23,7 +23,7 @@
     /* Total vertical space reserved for shell padding, page padding, and corner gear clearance. */
     --landscape-board-height-offset: 4.5rem;
     /* Combined width reserved for both side clock rails, page padding, and inter-column gaps. */
-    --landscape-board-width-offset: 24rem;
+    --landscape-board-width-offset: 28rem;
     padding: 0.85rem;
     border-radius: 1.65rem;
     background:

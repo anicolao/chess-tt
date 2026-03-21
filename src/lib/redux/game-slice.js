@@ -122,10 +122,21 @@ function createTimeoutOutcome(timerSettings, expiredSeat) {
   };
 }
 
-function synchronizeTimerState(timerState, timerSettings, turn, status, now) {
-  const normalizedTimerState = normalizeClockState(timerState, timerSettings, turn, status);
+function synchronizeTimerState(timerState, timerSettings, turn, status, now, clockArmed) {
+  const normalizedTimerState = normalizeClockState(timerState, timerSettings, turn, status, clockArmed);
 
   if (status !== 'active') {
+    return {
+      timerState: {
+        ...normalizedTimerState,
+        activeSeat: null,
+        lastUpdatedAt: null
+      },
+      expiredSeat: null
+    };
+  }
+
+  if (!clockArmed) {
     return {
       timerState: {
         ...normalizedTimerState,
@@ -214,12 +225,14 @@ function synchronizeTimerState(timerState, timerSettings, turn, status, now) {
 
 function applySynchronizedTimer(state, now) {
   const timerSettings = normalizeTimeSettings(state.timerSettings);
+  const clockArmed = state.history.length > 0;
   const { timerState, expiredSeat } = synchronizeTimerState(
     state.timerState,
     timerSettings,
     state.turn,
     state.status,
-    now
+    now,
+    clockArmed
   );
 
   if (!expiredSeat || state.status !== 'active') {
@@ -249,17 +262,19 @@ function advanceTimerAfterMove(timerState, timerSettings, movingColor, nextTurn,
   const nextActiveSeat = status === 'active' ? getSeatForColor(timerSettings.seatColors, nextTurn) : null;
 
   if (!movingSeat) {
-    return normalizeClockState(timerState, timerSettings, nextTurn, status);
+    return normalizeClockState(timerState, timerSettings, nextTurn, status, true);
   }
 
   return {
-    ...normalizeClockState(timerState, timerSettings, nextTurn, status),
+    ...normalizeClockState(timerState, timerSettings, nextTurn, status, true),
     activeSeat: nextActiveSeat,
     lastUpdatedAt: nextActiveSeat && typeof now === 'number' ? now : null,
     seats: {
       ...timerState.seats,
       [movingSeat]: {
-        remainingMs: timerState.seats[movingSeat].remainingMs + getIncrementMs(timerSettings, movingSeat)
+        remainingMs: timerState.seats[movingSeat].remainingMs + (
+          timerState.activeSeat === movingSeat ? getIncrementMs(timerSettings, movingSeat) : 0
+        )
       }
     }
   };
@@ -383,7 +398,13 @@ export function rebuildGameState(events = [], options = {}) {
     {
       ...baseState,
       timerSettings,
-      timerState: options.timerState ?? createInitialClockState(timerSettings, baseState.turn, baseState.status, options.now)
+      timerState: options.timerState ?? createInitialClockState(
+        timerSettings,
+        baseState.turn,
+        baseState.status,
+        options.now,
+        baseState.history.length > 0
+      )
     },
     options.now
   );

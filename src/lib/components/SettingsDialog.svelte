@@ -24,19 +24,33 @@
   export let onResign = () => {};
   export let onApplyTimeControls = () => {};
 
+  function getTimeSettingsSignature(settings) {
+    return [
+      settings.presetId,
+      settings.seatColors.top,
+      settings.seatColors.bottom,
+      settings.seats.top.initialMinutes,
+      settings.seats.top.incrementSeconds,
+      settings.seats.bottom.initialMinutes,
+      settings.seats.bottom.incrementSeconds
+    ].join('|');
+  }
+
   $: facesTopEdge = corner.startsWith('top');
   const fallbackTimeSettings = createDefaultTimeSettings();
   let safeTimeSettings = timeSettings ?? fallbackTimeSettings;
   $: safeTimeSettings = timeSettings ?? fallbackTimeSettings;
-  let syncedTimeSettings = safeTimeSettings;
+  let syncedTimeSettingsSignature = getTimeSettingsSignature(safeTimeSettings);
   let selectedPresetId = safeTimeSettings.presetId ?? TIME_CONTROL_PRESETS[0].id;
   let topMinutes = safeTimeSettings.seats.top.initialMinutes;
   let topIncrement = safeTimeSettings.seats.top.incrementSeconds;
   let bottomMinutes = safeTimeSettings.seats.bottom.initialMinutes;
   let bottomIncrement = safeTimeSettings.seats.bottom.incrementSeconds;
 
-  $: if (safeTimeSettings !== syncedTimeSettings) {
-    syncedTimeSettings = safeTimeSettings;
+  $: safeTimeSettingsSignature = getTimeSettingsSignature(safeTimeSettings);
+
+  $: if (safeTimeSettingsSignature !== syncedTimeSettingsSignature) {
+    syncedTimeSettingsSignature = safeTimeSettingsSignature;
     selectedPresetId = safeTimeSettings.presetId ?? TIME_CONTROL_PRESETS[0].id;
     topMinutes = safeTimeSettings.seats.top.initialMinutes;
     topIncrement = safeTimeSettings.seats.top.incrementSeconds;

@@ -16,6 +16,6 @@ Verify that seat-based presets and custom time controls can be configured from s
 ![Preset clocks switch and continue running after a move](./screenshots/001-live-clock-switch.png)
 
 ### Verifications
-- [x] The moving bottom seat receives its increment and waits after moving
-- [x] The top seat becomes active immediately after the move handoff
+- [x] The moving bottom seat keeps its full time and waits after the opening move
+- [x] The top seat becomes active and begins counting down only after White completes move one
 

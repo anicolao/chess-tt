@@ -54,24 +54,27 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
   await page.getByRole('button', { name: 'Apply clock settings' }).click();
   await page.evaluate(() => window['__setMockNow'](1000));
 
-  await expect(page.getByLabel('bottom seat clock')).toContainText('04:59');
+  await expect(page.getByLabel('bottom seat clock')).toContainText('05:00');
+  await page.getByRole('group', { name: 'Top seat' }).getByRole('spinbutton', { name: 'Minutes' }).fill('14');
+  await expect(page.getByRole('group', { name: 'Top seat' }).getByRole('spinbutton', { name: 'Minutes' })).toHaveValue('14');
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: /e2, White pawn/i }).click();
   await page.locator('[data-square="e4"]').click();
+  await page.evaluate(() => window['__setMockNow'](2000));
   await tester.step('live-clock-switch', {
     description: 'Preset clocks switch and continue running after a move',
     verifications: [
       {
-        spec: 'The moving bottom seat receives its increment and waits after moving',
+        spec: 'The moving bottom seat keeps its full time and waits after the opening move',
         check: async () => {
-          await expect(page.getByLabel('bottom seat clock')).toContainText('05:02');
+          await expect(page.getByLabel('bottom seat clock')).toContainText('05:00');
           await expect(page.getByLabel('bottom seat clock')).toContainText('Waiting');
         }
       },
       {
-        spec: 'The top seat becomes active immediately after the move handoff',
+        spec: 'The top seat becomes active and begins counting down only after White completes move one',
         check: async () => {
-          await expect(page.getByLabel('top seat clock')).toContainText('05:00');
+          await expect(page.getByLabel('top seat clock')).toContainText('04:59');
           await expect(page.getByLabel('top seat clock')).toContainText('Your move');
         }
       }

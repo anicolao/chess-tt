@@ -123,9 +123,9 @@ export function normalizeTimeSettings(settings = {}) {
   };
 }
 
-export function createInitialClockState(timeSettings, turn = 'w', status = 'active', now = null) {
+export function createInitialClockState(timeSettings, turn = 'w', status = 'active', now = null, clockArmed = false) {
   const normalizedSettings = normalizeTimeSettings(timeSettings);
-  const activeSeat = status === 'active' ? getSeatForColor(normalizedSettings.seatColors, turn) : null;
+  const activeSeat = status === 'active' && clockArmed ? getSeatForColor(normalizedSettings.seatColors, turn) : null;
 
   return {
     activeSeat,
@@ -141,10 +141,10 @@ export function createInitialClockState(timeSettings, turn = 'w', status = 'acti
   };
 }
 
-export function normalizeClockState(clockState, timeSettings, turn = 'w', status = 'active') {
-  const defaults = createInitialClockState(timeSettings, turn, status);
+export function normalizeClockState(clockState, timeSettings, turn = 'w', status = 'active', clockArmed = false) {
+  const defaults = createInitialClockState(timeSettings, turn, status, null, clockArmed);
   const normalizedSettings = normalizeTimeSettings(timeSettings);
-  const derivedActiveSeat = status === 'active' ? getSeatForColor(normalizedSettings.seatColors, turn) : null;
+  const derivedActiveSeat = status === 'active' && clockArmed ? getSeatForColor(normalizedSettings.seatColors, turn) : null;
 
   return {
     activeSeat: status === 'active'
