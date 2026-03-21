@@ -255,11 +255,12 @@
 
   @media (orientation: portrait) {
     .tabletop-app {
-      width: min(100dvh, 100rem);
+      --portrait-tabletop-width: min(100dvh, 100rem);
+      width: var(--portrait-tabletop-width);
       max-width: 100dvh;
       height: 100vw;
       position: relative;
-      left: calc((100vw - min(100dvh, 100rem)) / 2);
+      left: calc((100vw - var(--portrait-tabletop-width)) / 2);
       transform: rotate(90deg);
       transform-origin: center center;
     }
