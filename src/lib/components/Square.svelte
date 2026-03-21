@@ -63,12 +63,12 @@
   }
 
   .light {
-    background: #e7d7b4;
+    background: var(--board-light-square, #e7d7b4);
     color: #2d1e16;
   }
 
   .dark {
-    background: #576272;
+    background: var(--board-dark-square, #576272);
     color: #f6f1e7;
   }
 

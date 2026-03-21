@@ -24,6 +24,7 @@ function loadPersistedGameState() {
 
     return {
       game: rebuildGameState(parsed.events, {
+        boardThemeSettings: parsed.boardThemeSettings,
         timerSettings: parsed.timerSettings,
         timerState: parsed.timerState
       })
@@ -50,6 +51,7 @@ function persistGameState(gameState) {
             color,
             promotion
           })),
+          boardThemeSettings: gameState.boardThemeSettings,
           timerSettings: gameState.timerSettings,
           timerState: gameState.timerState
         })

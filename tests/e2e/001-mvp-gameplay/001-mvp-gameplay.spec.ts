@@ -29,9 +29,11 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
         }
       },
       {
-        spec: 'Square coordinate labels are not rendered on the board',
+        spec: 'Board-edge coordinate labels are rendered around all four sides of the board',
         check: async () => {
-          await expect(page.locator('.coordinate')).toHaveCount(0);
+          await expect(page.locator('.coordinate')).toHaveCount(32);
+          await expect(page.locator('.coordinate[data-edge="top"]').first()).toHaveText('a');
+          await expect(page.locator('.coordinate[data-edge="right"]').first()).toHaveText('8');
         }
       },
       {

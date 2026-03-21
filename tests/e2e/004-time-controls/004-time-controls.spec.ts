@@ -21,6 +21,45 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
   await expect(page.locator('[data-app-ready="true"]')).toBeVisible();
   await page.getByRole('button', { name: /Open bottom seat settings/i }).click();
 
+  await page.getByRole('button', { name: 'Green board colours' }).click();
+
+  await tester.step('board-theme-presets', {
+    description: 'Board theme presets and custom colours can be selected from settings',
+    verifications: [
+      {
+        spec: 'The preset row is rendered at the top of the settings dialog with three presets and a custom entry',
+        check: async () => {
+          await expect(page.getByRole('button', { name: 'Current board colours' })).toBeVisible();
+          await expect(page.getByRole('button', { name: 'Green board colours' })).toBeVisible();
+          await expect(page.getByRole('button', { name: 'Brown board colours' })).toBeVisible();
+          await expect(page.getByRole('button', { name: 'Custom board colours' })).toBeVisible();
+        }
+      },
+      {
+        spec: 'Selecting the green preset updates the live board square colours immediately',
+        check: async () => {
+          await expect(page.locator('.board-shell')).toHaveAttribute('style', /#f2ecd8/i);
+          await expect(page.locator('.board-shell')).toHaveAttribute('style', /#557a46/i);
+          await expect.poll(async () => page.evaluate(() => {
+            const darkSquare = getComputedStyle(document.querySelector('[data-square="a8"]') as Element).backgroundColor;
+            const lightSquare = getComputedStyle(document.querySelector('[data-square="b8"]') as Element).backgroundColor;
+
+            return { darkSquare, lightSquare };
+          })).toEqual({
+            darkSquare: 'rgb(85, 122, 70)',
+            lightSquare: 'rgb(242, 236, 216)'
+          });
+        }
+      }
+    ]
+  });
+
+  await page.getByRole('button', { name: 'Custom board colours' }).click();
+  await expect(page.getByRole('dialog', { name: 'Custom board colours' })).toBeVisible();
+  await page.getByLabel('Light squares').fill('#334455');
+  await page.getByLabel('Dark squares').fill('#112233');
+  await page.getByRole('button', { name: 'Apply board colours' }).click();
+
   await page.getByRole('group', { name: "Opponent's Clock" }).getByRole('spinbutton', { name: 'Minutes' }).fill('15');
   await page.getByRole('group', { name: 'Your Clock' }).getByRole('spinbutton', { name: 'Minutes' }).fill('3');
   await page.getByRole('button', { name: 'Apply clock settings' }).click();
@@ -45,6 +84,22 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
         check: async () => {
           await expect(page.getByRole('dialog', { name: 'Game settings' })).toContainText("Opponent's Clock");
           await expect(page.getByRole('dialog', { name: 'Game settings' })).toContainText('Your Clock');
+        }
+      },
+      {
+        spec: 'Applying custom board colours keeps the board on the chosen custom palette',
+        check: async () => {
+          await expect(page.locator('.board-shell')).toHaveAttribute('style', /#334455/i);
+          await expect(page.locator('.board-shell')).toHaveAttribute('style', /#112233/i);
+          await expect.poll(async () => page.evaluate(() => {
+            const darkSquare = getComputedStyle(document.querySelector('[data-square="a8"]') as Element).backgroundColor;
+            const lightSquare = getComputedStyle(document.querySelector('[data-square="b8"]') as Element).backgroundColor;
+
+            return { darkSquare, lightSquare };
+          })).toEqual({
+            darkSquare: 'rgb(17, 34, 51)',
+            lightSquare: 'rgb(51, 68, 85)'
+          });
         }
       }
     ]

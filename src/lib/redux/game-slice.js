@@ -1,4 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
+import {
+  createDefaultBoardThemeSettings,
+  normalizeBoardThemeSettings
+} from '$lib/game/board-themes';
 import { createChess, getTurnName, pieceSymbol } from '$lib/game/chess-game';
 import {
   createInitialClockState,
@@ -417,6 +421,9 @@ export function rebuildGameState(events = [], options = {}) {
     history,
     lastMove,
     captured: deriveCapturedPieces(history),
+    boardThemeSettings: normalizeBoardThemeSettings(
+      options.boardThemeSettings ?? createDefaultBoardThemeSettings()
+    ),
     ui: createUiState()
   };
 
@@ -603,6 +610,7 @@ const gameSlice = createSlice({
       return rebuildGameState(
         [{ type: 'game.started' }],
         {
+          boardThemeSettings: state.boardThemeSettings,
           timerSettings: state.timerSettings,
           timerState: createInitialClockState(state.timerSettings, 'w', 'active', now),
           now
@@ -619,7 +627,9 @@ const gameSlice = createSlice({
 
       const nextEvents = [{ type: 'game.started' }, ...events.slice(0, -1)];
       const nextState = rebuildGameState(nextEvents, {
-        timerSettings: state.timerSettings,
+        timerSettings: timedState.timerSettings,
+        timerState: timedState.timerState,
+        boardThemeSettings: timedState.boardThemeSettings,
         now
       });
       const clockArmed = nextState.history.length > 0;
@@ -658,6 +668,7 @@ const gameSlice = createSlice({
         ...exportEvents(timedState),
         { type: 'game.resigned', color: timedState.turn }
       ], {
+        boardThemeSettings: timedState.boardThemeSettings,
         timerSettings: timedState.timerSettings,
         timerState: timedState.timerState,
         now
@@ -666,9 +677,16 @@ const gameSlice = createSlice({
     hydrateRequested(_state, action) {
       const events = action.payload?.events;
       return rebuildGameState(events, {
+        boardThemeSettings: action.payload?.boardThemeSettings,
         timerSettings: action.payload?.timerSettings,
         timerState: action.payload?.timerState
       });
+    },
+    boardThemeConfigured(state, action) {
+      return {
+        ...state,
+        boardThemeSettings: normalizeBoardThemeSettings(action.payload)
+      };
     },
     timeControlsConfigured(state, action) {
       const timeSettings = normalizeTimeSettings(action.payload);
