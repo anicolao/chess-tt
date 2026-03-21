@@ -2,8 +2,10 @@
   import { onDestroy, onMount } from 'svelte';
   import '../app.css';
   import Board from '$lib/components/Board.svelte';
+  import ExportQrDialog from '$lib/components/ExportQrDialog.svelte';
   import GameInfo from '$lib/components/GameInfo.svelte';
   import SettingsDialog from '$lib/components/SettingsDialog.svelte';
+  import { buildExportUrl, getExportPlatform } from '$lib/game/game-export';
   import { getBoardRows } from '$lib/game/chess-game';
   import { appStore, gameActions, gameState } from '$lib/redux/store';
 
@@ -15,6 +17,7 @@
   // This flips after hydration so interaction tests can wait on a deterministic ready marker.
   let isHydrated = false;
   let activeSettingsCorner = null;
+  let activeExport = null;
   let clockIntervalId = null;
 
   onMount(() => {
@@ -36,6 +39,7 @@
   $: boardRows = getBoardRows(state.currentFen, state.ui, state.lastMove);
   $: canUndo = state.events.length > 1;
   $: canResign = state.status === 'active';
+  $: canExport = state.history.length > 0;
   $: topSeatColor = state.timerSettings.seatColors.top;
   $: bottomSeatColor = state.timerSettings.seatColors.bottom;
   $: activeSeat = state.timerState.activeSeat;
@@ -49,8 +53,32 @@
     activeSettingsCorner = null;
   }
 
+  function openExport(platformId) {
+    const platform = getExportPlatform(platformId);
+
+    if (!platform || state.history.length === 0) {
+      return;
+    }
+
+    closeSettings();
+    activeExport = {
+      platformId: platform.id,
+      platformLabel: platform.label,
+      url: buildExportUrl(state, platform.id)
+    };
+  }
+
+  function closeExport() {
+    activeExport = null;
+  }
+
   function handleKeydown(event) {
     if (event.key === 'Escape') {
+      if (activeExport) {
+        closeExport();
+        return;
+      }
+
       closeSettings();
     }
   }
@@ -119,6 +147,7 @@
             winner={state.winner}
             capturedWhite={state.captured.white}
             capturedBlack={state.captured.black}
+            {canExport}
             timeSettings={state.timerSettings}
             {canUndo}
             {canResign}
@@ -127,6 +156,8 @@
             onUndo={() => dispatchAndClose(gameActions.undoRequested({ now: Date.now() }))}
             onResign={() => dispatchAndClose(gameActions.resignRequested({ now: Date.now() }))}
             onApplyTimeControls={dispatchClockSettings}
+            onExportChessCom={() => openExport('chess-com')}
+            onExportLichess={() => openExport('lichess')}
           />
         {/if}
       </div>
@@ -145,6 +176,15 @@
       />
     </div>
   </div>
+
+  {#if activeExport}
+    <ExportQrDialog
+      platformId={activeExport.platformId}
+      platformLabel={activeExport.platformLabel}
+      url={activeExport.url}
+      onClose={closeExport}
+    />
+  {/if}
 </div>
 
 <style>
