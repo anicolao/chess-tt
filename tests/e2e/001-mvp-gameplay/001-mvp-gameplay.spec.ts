@@ -51,7 +51,7 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
         }
       },
       {
-        spec: 'Pieces use the requested Wikimedia SVG rendering',
+        spec: 'Pieces use the embedded Wikimedia SVG rendering',
         check: async () => {
           const whitePiece = page.locator('[data-square="e2"] [data-piece-style="wikimedia-svg"]');
           const blackPiece = page.locator('[data-square="d7"] [data-piece-style="wikimedia-svg"]');
@@ -60,14 +60,9 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
           await expect(blackPiece).toBeVisible();
           await expect(page.locator('[data-piece-style="flat-glyph"]')).toHaveCount(0);
           await expect(page.locator('[data-piece-style="engraved-glyph"]')).toHaveCount(0);
-          await expect(whitePiece).toHaveAttribute(
-            'data-piece-src',
-            'https://upload.wikimedia.org/wikipedia/commons/4/45/Chess_plt45.svg'
-          );
-          await expect(blackPiece).toHaveAttribute(
-            'data-piece-src',
-            'https://upload.wikimedia.org/wikipedia/commons/c/c7/Chess_pdt45.svg'
-          );
+          await expect(whitePiece).toHaveAttribute('data-piece-src', /^data:image\/svg\+xml,/);
+          await expect(blackPiece).toHaveAttribute('data-piece-src', /^data:image\/svg\+xml,/);
+          await expect(page.locator('[data-piece-fallback]')).toHaveCount(0);
         }
       },
       {
@@ -143,7 +138,7 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
         }
       },
       {
-        spec: 'The board stays centered and visible while the player clocks move above and below it on-screen',
+        spec: 'The board stays centered and visible while the player clocks move to the long screen edges',
         check: async () => {
           const layout = await page.evaluate(() => {
             const board = document.querySelector('[aria-label="Chess board"]')?.getBoundingClientRect();
@@ -155,13 +150,13 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
             }
 
             return {
-              boardTop: board.top,
-              boardBottom: board.bottom,
+              boardLeft: board.left,
+              boardRight: board.right,
               boardWidth: board.width,
               boardHeight: board.height,
               boardCenterX: board.left + (board.width / 2),
-              blackClockBottom: blackClock.bottom,
-              whiteClockTop: whiteClock.top,
+              blackClockRight: blackClock.right,
+              whiteClockLeft: whiteClock.left,
               viewportCenterX: window.innerWidth / 2
             };
           });
@@ -172,8 +167,8 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
 
           expect(layout.boardWidth).toBeGreaterThan(200);
           expect(layout.boardHeight).toBeGreaterThan(200);
-          expect(layout.blackClockBottom).toBeLessThan(layout.boardTop);
-          expect(layout.whiteClockTop).toBeGreaterThan(layout.boardBottom);
+          expect(layout.blackClockRight).toBeLessThan(layout.boardLeft);
+          expect(layout.whiteClockLeft).toBeGreaterThan(layout.boardRight);
           expect(Math.abs(layout.boardCenterX - layout.viewportCenterX)).toBeLessThan(CENTERING_TOLERANCE_PX);
         }
       },
