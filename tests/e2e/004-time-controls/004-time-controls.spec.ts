@@ -61,8 +61,10 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
   await page.getByRole('button', { name: /e2, White pawn/i }).click();
   await page.locator('[data-square="e4"]').click();
   await page.evaluate(() => window['__setMockNow'](2000));
+  await page.getByRole('button', { name: /Open bottom right settings/i }).click();
+  await page.getByRole('group', { name: 'Top seat' }).getByRole('spinbutton', { name: 'Minutes' }).fill('14');
   await tester.step('live-clock-switch', {
-    description: 'Preset clocks switch and continue running after a move',
+    description: 'The live clock handoff and settings editing stay stable after move one',
     verifications: [
       {
         spec: 'The moving bottom seat keeps its full time and waits after the opening move',
@@ -73,21 +75,6 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
       },
       {
         spec: 'The top seat becomes active and begins counting down only after White completes move one',
-        check: async () => {
-          await expect(page.getByLabel('top seat clock')).toContainText('04:59');
-          await expect(page.getByLabel('top seat clock')).toContainText('Your move');
-        }
-      }
-    ]
-  });
-
-  await page.getByRole('button', { name: /Open bottom right settings/i }).click();
-  await page.getByRole('group', { name: 'Top seat' }).getByRole('spinbutton', { name: 'Minutes' }).fill('14');
-  await tester.step('editing-during-live-clock', {
-    description: 'Editing a time control stays stable while a live clock is running',
-    verifications: [
-      {
-        spec: 'The running top seat clock remains active while settings stay open',
         check: async () => {
           await expect(page.getByLabel('top seat clock')).toContainText('04:59');
           await expect(page.getByLabel('top seat clock')).toContainText('Your move');
