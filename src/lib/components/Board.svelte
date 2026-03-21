@@ -24,6 +24,10 @@
     --landscape-board-height-offset: 4.5rem;
     /* Combined width reserved for both side clock rails, page padding, and inter-column gaps. */
     --landscape-board-width-offset: 28rem;
+    /* Combined horizontal space reserved for portrait padding and the player-relative gear buttons. */
+    --portrait-board-width-offset: 5rem;
+    width: fit-content;
+    max-width: 100%;
     padding: 0.85rem;
     border-radius: 1.65rem;
     background:
@@ -37,7 +41,7 @@
   .board {
     display: grid;
     grid-template-columns: repeat(8, minmax(0, 1fr));
-    width: min(100%, 86vmin, 52rem);
+    width: min(86vmin, calc(100vw - var(--portrait-board-width-offset)), 52rem);
     border-radius: 1rem;
     overflow: hidden;
   }

@@ -9,7 +9,7 @@ Verify that seat-based presets and custom time controls can be configured from s
 ### Verifications
 - [x] The top seat clock shows the longer custom time
 - [x] The bottom seat clock shows the shorter custom time
-- [x] The settings dialog exposes the tabletop seat labels
+- [x] The settings dialog exposes player-relative clock labels
 
 ## The live clock handoff and settings editing stay stable after move one
 

@@ -4,12 +4,12 @@
     CUSTOM_TIME_CONTROL_PRESET_ID,
     createDefaultTimeSettings,
     getColorName,
-    getSeatLabel,
     resolveTimeControlPresetId,
     TIME_CONTROL_PRESETS
   } from '$lib/game/time-controls';
 
   export let corner = 'bottom-right';
+  export let invokingSeat = 'bottom';
   export let message = 'White to move';
   export let status = 'active';
   export let winner = null;
@@ -64,6 +64,8 @@
   let topIncrement = safeTimeSettings.seats.top.incrementSeconds;
   let bottomMinutes = safeTimeSettings.seats.bottom.initialMinutes;
   let bottomIncrement = safeTimeSettings.seats.bottom.incrementSeconds;
+  $: topClockLabel = invokingSeat === 'top' ? 'Your Clock' : "Opponent's Clock";
+  $: bottomClockLabel = invokingSeat === 'bottom' ? 'Your Clock' : "Opponent's Clock";
 
   $: comparableSafeTimeSettings = cloneComparableTimeSettings(safeTimeSettings);
 
@@ -151,7 +153,7 @@
 
     <div class="seat-control-grid">
       <fieldset class="seat-control">
-        <legend>{getSeatLabel('top')}</legend>
+        <legend>{topClockLabel}</legend>
         <p class="seat-color">{getColorName(safeTimeSettings.seatColors.top)} pieces</p>
         <label>
           <span>Minutes</span>
@@ -164,7 +166,7 @@
       </fieldset>
 
       <fieldset class="seat-control">
-        <legend>{getSeatLabel('bottom')}</legend>
+        <legend>{bottomClockLabel}</legend>
         <p class="seat-color">{getColorName(safeTimeSettings.seatColors.bottom)} pieces</p>
         <label>
           <span>Minutes</span>
@@ -235,15 +237,18 @@
     position: absolute;
     z-index: 3;
     display: grid;
-    gap: 0.9rem;
-    width: min(18rem, calc(100vw - var(--dialog-viewport-padding)));
-    padding: 1rem;
+    gap: 1rem;
+    width: min(30rem, calc(100vw - var(--dialog-viewport-padding)));
+    max-height: calc(100dvh - var(--dialog-viewport-padding));
+    padding: 1.1rem;
     border-radius: 1.2rem;
     background: rgba(10, 16, 23, 0.96);
     box-shadow:
       0 1.2rem 2.2rem rgba(0, 0, 0, 0.42),
       inset 0 0 0 1px rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(14px);
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .top-left,
@@ -400,6 +405,7 @@
   .seat-control legend {
     color: #f5f7fa;
     font-weight: 700;
+    margin-bottom: 0.2rem;
   }
 
   .seat-color {
@@ -433,7 +439,7 @@
   @media (max-width: 640px) {
     .settings-dialog {
       --dialog-viewport-padding: 1.5rem;
-      width: min(16rem, calc(100vw - var(--dialog-viewport-padding)));
+      width: min(22rem, calc(100vw - var(--dialog-viewport-padding)));
     }
   }
 
@@ -442,6 +448,10 @@
     .seat-control-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       align-items: start;
+    }
+
+    .captures {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 </style>
