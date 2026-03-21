@@ -15,6 +15,7 @@ describe('game reducer', () => {
     expect(state.captured.white).toHaveLength(0);
     expect(state.captured.black).toHaveLength(0);
     expect(state.events.map((event) => event.type)).toEqual(['game.started']);
+    expect(state.boardThemeSettings.presetId).toBe('slate-sand');
     expect(state.timerSettings.seats.top.initialMinutes).toBe(15);
     expect(state.timerSettings.seats.bottom.initialMinutes).toBe(15);
     expect(state.timerState.activeSeat).toBeNull();
@@ -132,6 +133,24 @@ describe('game reducer', () => {
     expect(state.timerState.seats.top.remainingMs).toBe(900000);
     expect(state.timerState.seats.bottom.remainingMs).toBe(180000);
     expect(state.timerState.activeSeat).toBeNull();
+  });
+
+  test('applies custom board colours independently from the clock settings', () => {
+    const state = gameReducer(undefined, gameActions.boardThemeConfigured({
+      palette: {
+        lightSquare: '#334455',
+        darkSquare: '#112233'
+      }
+    }));
+
+    expect(state.boardThemeSettings).toEqual({
+      presetId: 'custom',
+      palette: {
+        lightSquare: '#334455',
+        darkSquare: '#112233'
+      }
+    });
+    expect(state.timerSettings.presetId).toBe('rapid-15-10');
   });
 
   test('starts the opposing clock after white completes the first move', () => {

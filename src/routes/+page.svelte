@@ -46,6 +46,7 @@
   $: activeSettingsSeat = playerSettingsAnchors.find(({ corner }) => corner === activeSettingsCorner)?.seat ?? 'bottom';
 
   function toggleSettings(corner) {
+    dispatch(gameActions.clockTicked(Date.now()));
     activeSettingsCorner = activeSettingsCorner === corner ? null : corner;
   }
 
@@ -95,6 +96,10 @@
     }));
   }
 
+  function dispatchBoardThemeSettings(boardThemeSettings) {
+    dispatch(gameActions.boardThemeConfigured(boardThemeSettings));
+  }
+
   function settingsLabel(seat) {
     return `Open ${seat} seat settings`;
   }
@@ -136,7 +141,11 @@
           </button>
         {/each}
 
-        <Board rows={boardRows} onPress={(square) => dispatch(gameActions.squarePressed({ square, now: Date.now() }))} />
+        <Board
+          rows={boardRows}
+          palette={state.boardThemeSettings.palette}
+          onPress={(square) => dispatch(gameActions.squarePressed({ square, now: Date.now() }))}
+        />
 
         {#if activeSettingsCorner}
           <SettingsDialog
@@ -148,6 +157,7 @@
             capturedWhite={state.captured.white}
             capturedBlack={state.captured.black}
             {canExport}
+            boardThemeSettings={state.boardThemeSettings}
             timeSettings={state.timerSettings}
             {canUndo}
             {canResign}
@@ -155,6 +165,7 @@
             onNewGame={() => dispatchAndClose(gameActions.newGameRequested({ now: Date.now() }))}
             onUndo={() => dispatchAndClose(gameActions.undoRequested({ now: Date.now() }))}
             onResign={() => dispatchAndClose(gameActions.resignRequested({ now: Date.now() }))}
+            onApplyBoardTheme={dispatchBoardThemeSettings}
             onApplyTimeControls={dispatchClockSettings}
             onExportChessCom={() => openExport('chess-com')}
             onExportLichess={() => openExport('lichess')}

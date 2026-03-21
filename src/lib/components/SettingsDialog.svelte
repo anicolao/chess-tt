@@ -1,6 +1,11 @@
 <script>
   import Controls from '$lib/components/Controls.svelte';
   import {
+    BOARD_THEME_PRESETS,
+    createDefaultBoardThemeSettings,
+    CUSTOM_BOARD_THEME_PRESET_ID
+  } from '$lib/game/board-themes';
+  import {
     CUSTOM_TIME_CONTROL_PRESET_ID,
     createDefaultTimeSettings,
     getColorName,
@@ -18,11 +23,13 @@
   export let canUndo = false;
   export let canResign = true;
   export let canExport = false;
+  export let boardThemeSettings = null;
   export let timeSettings = null;
   export let onClose = () => {};
   export let onNewGame = () => {};
   export let onUndo = () => {};
   export let onResign = () => {};
+  export let onApplyBoardTheme = () => {};
   export let onApplyTimeControls = () => {};
   export let onExportChessCom = () => {};
   export let onExportLichess = () => {};
@@ -58,11 +65,17 @@
   }
 
   $: facesTopEdge = corner.startsWith('top');
+  const fallbackBoardThemeSettings = createDefaultBoardThemeSettings();
   const fallbackTimeSettings = createDefaultTimeSettings();
+  let safeBoardThemeSettings = boardThemeSettings ?? fallbackBoardThemeSettings;
   let safeTimeSettings = timeSettings ?? fallbackTimeSettings;
+  $: safeBoardThemeSettings = boardThemeSettings ?? fallbackBoardThemeSettings;
   $: safeTimeSettings = timeSettings ?? fallbackTimeSettings;
   let syncedTimeSettings = cloneComparableTimeSettings(safeTimeSettings);
   let selectedPresetId = safeTimeSettings.presetId ?? fallbackTimeSettings.presetId;
+  let customLightSquare = safeBoardThemeSettings.palette.lightSquare;
+  let customDarkSquare = safeBoardThemeSettings.palette.darkSquare;
+  let showCustomBoardThemeDialog = false;
   let topMinutes = safeTimeSettings.seats.top.initialMinutes;
   let topIncrement = safeTimeSettings.seats.top.incrementSeconds;
   let bottomMinutes = safeTimeSettings.seats.bottom.initialMinutes;
@@ -71,6 +84,7 @@
   $: bottomClockLabel = invokingSeat === 'bottom' ? 'Your Clock' : "Opponent's Clock";
 
   $: comparableSafeTimeSettings = cloneComparableTimeSettings(safeTimeSettings);
+  $: currentBoardThemePresetId = safeBoardThemeSettings.presetId ?? fallbackBoardThemeSettings.presetId;
 
   $: if (!timeSettingsMatch(comparableSafeTimeSettings, syncedTimeSettings)) {
     syncedTimeSettings = comparableSafeTimeSettings;
@@ -79,6 +93,11 @@
     topIncrement = safeTimeSettings.seats.top.incrementSeconds;
     bottomMinutes = safeTimeSettings.seats.bottom.initialMinutes;
     bottomIncrement = safeTimeSettings.seats.bottom.incrementSeconds;
+  }
+
+  $: if (!showCustomBoardThemeDialog) {
+    customLightSquare = safeBoardThemeSettings.palette.lightSquare;
+    customDarkSquare = safeBoardThemeSettings.palette.darkSquare;
   }
 
   function handlePresetChange(event) {
@@ -118,6 +137,38 @@
       }
     });
   }
+
+  function applyBoardPreset(preset) {
+    showCustomBoardThemeDialog = false;
+    onApplyBoardTheme({
+      presetId: preset.id,
+      palette: {
+        lightSquare: preset.lightSquare,
+        darkSquare: preset.darkSquare
+      }
+    });
+  }
+
+  function openCustomBoardThemeDialog() {
+    customLightSquare = safeBoardThemeSettings.palette.lightSquare;
+    customDarkSquare = safeBoardThemeSettings.palette.darkSquare;
+    showCustomBoardThemeDialog = true;
+  }
+
+  function closeCustomBoardThemeDialog() {
+    showCustomBoardThemeDialog = false;
+  }
+
+  function applyCustomBoardTheme() {
+    onApplyBoardTheme({
+      presetId: CUSTOM_BOARD_THEME_PRESET_ID,
+      palette: {
+        lightSquare: customLightSquare,
+        darkSquare: customDarkSquare
+      }
+    });
+    showCustomBoardThemeDialog = false;
+  }
 </script>
 
 <div
@@ -127,6 +178,38 @@
   aria-label="Game settings"
   data-settings-corner={corner}
 >
+  <section class="board-theme-section" aria-label="Board colours">
+    <div class="board-theme-row">
+      {#each BOARD_THEME_PRESETS as preset}
+        <button
+          type="button"
+          class:selected={currentBoardThemePresetId === preset.id}
+          class="board-theme-button"
+          aria-label={`${preset.label} board colours`}
+          on:click={() => applyBoardPreset(preset)}
+        >
+          <span class="board-theme-preview" aria-hidden="true">
+            <span style={`background:${preset.darkSquare}`}></span>
+            <span style={`background:${preset.lightSquare}`}></span>
+            <span style={`background:${preset.lightSquare}`}></span>
+            <span style={`background:${preset.darkSquare}`}></span>
+          </span>
+          <span class="board-theme-label">{preset.label}</span>
+        </button>
+      {/each}
+      <button
+        type="button"
+        class:selected={currentBoardThemePresetId === CUSTOM_BOARD_THEME_PRESET_ID || showCustomBoardThemeDialog}
+        class="board-theme-button custom-board-theme-button"
+        aria-label="Custom board colours"
+        on:click={openCustomBoardThemeDialog}
+      >
+        <span class="board-theme-preview custom-preview" aria-hidden="true">…</span>
+        <span class="board-theme-label">...</span>
+      </button>
+    </div>
+  </section>
+
   <div class="header">
     <div>
       <p class="eyebrow">Game settings</p>
@@ -243,6 +326,30 @@
     {onUndo}
     {onResign}
   />
+
+  {#if showCustomBoardThemeDialog}
+    <div class="dialog-scrim" aria-hidden="true"></div>
+    <div class="custom-theme-dialog" role="dialog" aria-label="Custom board colours">
+      <div>
+        <p class="eyebrow">Custom board colours</p>
+        <p class="time-help">Pick the light and dark square colours for this board.</p>
+      </div>
+      <div class="custom-theme-grid">
+        <label class="color-picker">
+          <span>Light squares</span>
+          <input type="color" bind:value={customLightSquare} />
+        </label>
+        <label class="color-picker">
+          <span>Dark squares</span>
+          <input type="color" bind:value={customDarkSquare} />
+        </label>
+      </div>
+      <div class="custom-theme-actions">
+        <button type="button" class="secondary-button" on:click={closeCustomBoardThemeDialog}>Cancel</button>
+        <button type="button" class="apply-button" on:click={applyCustomBoardTheme}>Apply board colours</button>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -263,6 +370,65 @@
     backdrop-filter: blur(14px);
     overflow-x: hidden;
     overflow-y: auto;
+  }
+
+  .board-theme-section {
+    display: grid;
+  }
+
+  .board-theme-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .board-theme-button {
+    display: grid;
+    gap: 0.35rem;
+    justify-items: center;
+    padding: 0.45rem 0.35rem 0.4rem;
+    border: none;
+    border-radius: 0.95rem;
+    background: rgba(255, 255, 255, 0.04);
+    color: #f5f7fa;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  }
+
+  .board-theme-button.selected {
+    box-shadow:
+      inset 0 0 0 0.14rem rgba(142, 225, 255, 0.82),
+      0 0.55rem 1rem rgba(0, 0, 0, 0.18);
+  }
+
+  .board-theme-preview {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 2.4rem;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 0.55rem;
+    box-shadow:
+      0 0.45rem 0.8rem rgba(0, 0, 0, 0.18),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+
+  .board-theme-preview span {
+    display: block;
+  }
+
+  .custom-preview {
+    place-items: center;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .board-theme-label {
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
   .top-left,
@@ -386,13 +552,15 @@
   }
 
   .preset-picker,
-  .seat-control label {
+  .seat-control label,
+  .color-picker {
     display: grid;
     gap: 0.35rem;
   }
 
   .preset-picker span,
-  .seat-control span {
+  .seat-control span,
+  .color-picker span {
     color: #93aabb;
     font-size: 0.72rem;
     font-weight: 700;
@@ -408,6 +576,15 @@
     padding: 0.65rem 0.85rem;
     background: rgba(255, 255, 255, 0.08);
     color: #f5f7fa;
+  }
+
+  .color-picker input {
+    width: 100%;
+    min-height: 3rem;
+    border: none;
+    border-radius: 0.85rem;
+    padding: 0.4rem;
+    background: rgba(255, 255, 255, 0.08);
   }
 
   .seat-control-grid {
@@ -445,6 +622,15 @@
     font-weight: 700;
   }
 
+  .secondary-button {
+    min-height: 3rem;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #f5f7fa;
+    font-weight: 700;
+  }
+
   .export-button-grid {
     display: grid;
     gap: 0.75rem;
@@ -476,6 +662,35 @@
     filter: drop-shadow(0 0.08rem 0.16rem rgba(0, 0, 0, 0.35));
   }
 
+  .dialog-scrim {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(3, 8, 14, 0.7);
+    backdrop-filter: blur(4px);
+  }
+
+  .custom-theme-dialog {
+    position: absolute;
+    inset: 1rem;
+    z-index: 1;
+    display: grid;
+    gap: 0.8rem;
+    align-content: start;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: rgba(10, 16, 23, 0.98);
+    box-shadow:
+      0 1.1rem 2rem rgba(0, 0, 0, 0.36),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+
+  .custom-theme-grid,
+  .custom-theme-actions {
+    display: grid;
+    gap: 0.75rem;
+  }
+
   @media (max-width: 640px) {
     .settings-dialog {
       --dialog-viewport-padding: 1.5rem;
@@ -484,6 +699,8 @@
   }
 
   @media (min-width: 640px) {
+    .custom-theme-grid,
+    .custom-theme-actions,
     .time-controls-header,
     .seat-control-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
