@@ -12,6 +12,7 @@ Verify that selecting a pawn highlights the legal destinations on the tabletop b
 - [x] The selected square is marked as selected
 - [x] The e3 and e4 targets are highlighted
 - [x] Black pieces are oriented toward the top player
+- [x] Pieces use the flat direct-on-board rendering style
 - [x] The landscape layout fits the viewport without page scrolling
 - [x] The clocks flank the centered board in landscape
 

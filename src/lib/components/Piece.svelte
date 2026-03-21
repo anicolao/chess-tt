@@ -1,90 +1,82 @@
 <script>
+  const BLACK_PAWN_SYMBOL = '♟';
+
   export let symbol = '';
   export let label = '';
   export let color = '';
+
+  $: needsScaleAdjustment = symbol === BLACK_PAWN_SYMBOL;
 </script>
 
 <span
   class:black={color === 'b'}
   class:facing-top-player={color === 'b'}
+  class:scaled-piece={needsScaleAdjustment}
   class="piece"
   role="img"
   aria-label={label}
   data-facing={color === 'b' ? 'top-player' : 'bottom-player'}
   data-piece-color={color}
-  data-piece-style="engraved-glyph"
+  data-piece-style="flat-glyph"
 >
-  <span class="glyph glyph-shadow" aria-hidden="true">{symbol}</span>
-  <span class="glyph glyph-outline" aria-hidden="true">{symbol}</span>
-  <span class="glyph glyph-fill" aria-hidden="true">{symbol}</span>
+  <span class="glyph" aria-hidden="true">{symbol}</span>
 </span>
 
 <style>
   .piece {
-    position: relative;
     display: inline-grid;
     align-items: center;
     justify-content: center;
-    width: 84%;
+    width: 82%;
     aspect-ratio: 1;
     touch-action: none;
     transform-origin: center;
     user-select: none;
-  }
-
-  .piece::after {
-    content: '';
-    position: absolute;
-    inset: 56% 18% 8%;
-    border-radius: 999px;
-    background: radial-gradient(circle, rgba(7, 11, 17, 0.34), transparent 72%);
-    filter: blur(0.28rem);
-    pointer-events: none;
+    --piece-glyph-scale: 1;
+    --piece-glyph-offset-y: 2%;
   }
 
   .glyph {
-    position: absolute;
-    inset: 0;
     display: grid;
     place-items: center;
-    font-family: 'Iowan Old Style', Charter, Georgia, 'Times New Roman', serif;
-    font-size: clamp(2.6rem, 6vw, 4.3rem);
-    font-weight: 700;
+    font-family:
+      'Noto Sans Symbols 2',
+      'Segoe UI Symbol',
+      'Apple Symbols',
+      'Arial Unicode MS',
+      'Iowan Old Style',
+      Charter,
+      Georgia,
+      'Times New Roman',
+      serif;
+    font-size: clamp(2.45rem, 5.8vw, 4.1rem);
+    font-weight: 400;
     line-height: 1;
-    transform: translateY(3%);
+    transform: translateY(var(--piece-glyph-offset-y)) scale(var(--piece-glyph-scale));
     pointer-events: none;
+    text-rendering: geometricPrecision;
   }
 
-  .glyph-shadow {
-    color: rgba(7, 11, 17, 0.28);
-    transform: translate(5%, 9%);
-  }
-
-  .glyph-outline {
-    color: #243142;
-    -webkit-text-stroke: 0.12rem #23303f;
+  .piece .glyph {
+    color: #f8f2e1;
+    -webkit-text-stroke: 0.06rem #2f2418;
     text-shadow:
-      0 0.04rem 0 rgba(255, 255, 255, 0.36),
-      0 0.16rem 0.28rem rgba(0, 0, 0, 0.2);
+      0 0.03rem 0 rgba(255, 255, 255, 0.32),
+      0 0.12rem 0.12rem rgba(47, 36, 24, 0.16);
   }
 
-  .glyph-fill {
-    color: transparent;
-    -webkit-background-clip: text;
-    background-clip: text;
-    background: linear-gradient(180deg, #fffdf5 0%, #efe1bf 46%, #cbb27d 100%);
-  }
-
-  .piece.black .glyph-outline {
-    color: #f2e7cb;
-    -webkit-text-stroke: 0.11rem #d5c7a0;
+  .piece.black .glyph {
+    color: #1a2430;
+    -webkit-text-stroke: 0.05rem rgba(246, 236, 209, 0.54);
     text-shadow:
-      0 0.04rem 0 rgba(255, 255, 255, 0.12),
-      0 0.16rem 0.28rem rgba(0, 0, 0, 0.34);
+      0 0.03rem 0 rgba(255, 255, 255, 0.14),
+      0 0.12rem 0.12rem rgba(7, 11, 17, 0.18);
   }
 
-  .piece.black .glyph-fill {
-    background: linear-gradient(180deg, #5f6f84 0%, #2d3746 56%, #121923 100%);
+  .scaled-piece {
+    /* The black pawn glyph renders noticeably taller than the other unicode pieces. */
+    --piece-glyph-scale: 0.86;
+    --piece-glyph-offset-y: 4%;
   }
 
   .facing-top-player {
@@ -93,11 +85,11 @@
 
   @media (orientation: landscape) {
     .piece {
-      width: 86%;
+      width: 84%;
     }
 
     .glyph {
-      font-size: clamp(3rem, 4.2vw, 4.7rem);
+      font-size: clamp(2.85rem, 4vw, 4.45rem);
     }
   }
 </style>

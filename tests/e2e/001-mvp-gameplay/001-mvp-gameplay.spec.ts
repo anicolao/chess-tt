@@ -51,6 +51,14 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
         }
       },
       {
+        spec: 'Pieces use the flat direct-on-board rendering style',
+        check: async () => {
+          await expect(page.locator('[data-square="e2"] [data-piece-style="flat-glyph"]')).toBeVisible();
+          await expect(page.locator('[data-square="d7"] [data-piece-style="flat-glyph"]')).toBeVisible();
+          await expect(page.locator('[data-piece-style="engraved-glyph"]')).toHaveCount(0);
+        }
+      },
+      {
         spec: 'The landscape layout fits the viewport without page scrolling',
         check: async () => {
           const fitsViewport = await page.evaluate(() => (
