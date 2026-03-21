@@ -504,7 +504,10 @@ function createMoveState(state, from, to, now) {
       promotion
     })),
     moveEvent
-  ]);
+  ], {
+    boardThemeSettings: timedState.boardThemeSettings,
+    timerSettings: timedState.timerSettings
+  });
 
   return {
     ...next,
