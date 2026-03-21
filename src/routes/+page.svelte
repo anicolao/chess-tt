@@ -46,7 +46,9 @@
   $: activeSettingsSeat = playerSettingsAnchors.find(({ corner }) => corner === activeSettingsCorner)?.seat ?? 'bottom';
 
   function toggleSettings(corner) {
-    dispatch(gameActions.clockTicked(Date.now()));
+    if (state.status === 'active' && state.timerState.activeSeat) {
+      dispatch(gameActions.clockTicked(Date.now()));
+    }
     activeSettingsCorner = activeSettingsCorner === corner ? null : corner;
   }
 
