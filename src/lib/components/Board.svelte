@@ -19,12 +19,12 @@
 <div class="board-shell" style={boardStyle}>
   <div class="coordinate-strip files top" aria-hidden="true">
     {#each FILE_COORDINATES as coordinate}
-      <span class="coordinate" data-edge="top">{coordinate}</span>
+      <span class="coordinate" data-edge="top" data-coordinate={`top-${coordinate}`}>{coordinate}</span>
     {/each}
   </div>
   <div class="coordinate-strip ranks left" aria-hidden="true">
     {#each RANK_COORDINATES as coordinate}
-      <span class="coordinate" data-edge="left">{coordinate}</span>
+      <span class="coordinate" data-edge="left" data-coordinate={`left-${coordinate}`}>{coordinate}</span>
     {/each}
   </div>
   <div class="board" role="grid" aria-label="Chess board">
@@ -39,12 +39,12 @@
   </div>
   <div class="coordinate-strip ranks right" aria-hidden="true">
     {#each RANK_COORDINATES as coordinate}
-      <span class="coordinate" data-edge="right">{coordinate}</span>
+      <span class="coordinate" data-edge="right" data-coordinate={`right-${coordinate}`}>{coordinate}</span>
     {/each}
   </div>
   <div class="coordinate-strip files bottom" aria-hidden="true">
     {#each FILE_COORDINATES as coordinate}
-      <span class="coordinate" data-edge="bottom">{coordinate}</span>
+      <span class="coordinate" data-edge="bottom" data-coordinate={`bottom-${coordinate}`}>{coordinate}</span>
     {/each}
   </div>
 </div>
@@ -57,7 +57,12 @@
        32rem covers two 12rem rails plus the tabletop gap/padding budget and the rotated clock overhang needed
        for the paired 1024×768 landscape / 768×1024 portrait parity check to keep the rails fully outside the board. */
     --board-long-axis-offset: 32rem;
-    --coordinate-inset: 0.85rem;
+    display: grid;
+    grid-template-columns: auto auto auto;
+    grid-template-rows: auto auto auto;
+    align-items: stretch;
+    justify-items: stretch;
+    gap: 0;
     padding: 0.85rem;
     border-radius: 1.65rem;
     background:
@@ -69,7 +74,6 @@
   }
 
   .coordinate-strip {
-    position: absolute;
     display: grid;
     align-items: center;
     justify-items: center;
@@ -82,31 +86,29 @@
   }
 
   .coordinate-strip.files {
-    left: var(--coordinate-inset);
-    right: var(--coordinate-inset);
+    grid-column: 2;
     grid-template-columns: repeat(8, minmax(0, 1fr));
   }
 
   .coordinate-strip.ranks {
-    top: var(--coordinate-inset);
-    bottom: var(--coordinate-inset);
+    grid-row: 2;
     grid-template-rows: repeat(8, minmax(0, 1fr));
   }
 
   .coordinate-strip.top {
-    top: 0.18rem;
+    grid-row: 1;
   }
 
   .coordinate-strip.bottom {
-    bottom: 0.18rem;
+    grid-row: 3;
   }
 
   .coordinate-strip.left {
-    left: 0.18rem;
+    grid-column: 1;
   }
 
   .coordinate-strip.right {
-    right: 0.18rem;
+    grid-column: 3;
   }
 
   .coordinate {
@@ -118,6 +120,8 @@
 
   .board {
     position: relative;
+    grid-column: 2;
+    grid-row: 2;
     display: grid;
     grid-template-columns: repeat(8, minmax(0, 1fr));
     width: min(100%, 86vmin, 52rem);
@@ -127,7 +131,6 @@
 
   @media (orientation: landscape) {
     .board-shell {
-      --coordinate-inset: 0.7rem;
       padding: 0.7rem;
     }
 

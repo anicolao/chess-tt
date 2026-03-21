@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { TestStepHelper } from '../helpers/test-step-helper';
 
 const CENTERING_TOLERANCE_PX = 24;
+const COORDINATE_ALIGNMENT_TOLERANCE_PX = 2;
 const LANDSCAPE_VIEWPORT = { width: 1024, height: 768 };
 const PORTRAIT_VIEWPORT = { width: 768, height: 1024 };
 
@@ -34,6 +35,60 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
           await expect(page.locator('.coordinate')).toHaveCount(32);
           await expect(page.locator('.coordinate[data-edge="top"]').first()).toHaveText('a');
           await expect(page.locator('.coordinate[data-edge="right"]').first()).toHaveText('8');
+
+          const alignment = await page.evaluate(() => {
+            const topAElement = document.querySelector('[data-coordinate="top-a"]');
+            const bottomHElement = document.querySelector('[data-coordinate="bottom-h"]');
+            const left8Element = document.querySelector('[data-coordinate="left-8"]');
+            const right1Element = document.querySelector('[data-coordinate="right-1"]');
+            const a8Element = document.querySelector('[data-square="a8"]');
+            const h1Element = document.querySelector('[data-square="h1"]');
+
+            if (!topAElement || !bottomHElement || !left8Element || !right1Element || !a8Element || !h1Element) {
+              return {
+                error: 'Missing coordinate or square element for board-edge alignment check',
+                present: {
+                  topA: Boolean(topAElement),
+                  bottomH: Boolean(bottomHElement),
+                  left8: Boolean(left8Element),
+                  right1: Boolean(right1Element),
+                  a8: Boolean(a8Element),
+                  h1: Boolean(h1Element)
+                }
+              };
+            }
+
+            const topA = topAElement.getBoundingClientRect();
+            const bottomH = bottomHElement.getBoundingClientRect();
+            const left8 = left8Element.getBoundingClientRect();
+            const right1 = right1Element.getBoundingClientRect();
+            const a8 = a8Element.getBoundingClientRect();
+            const h1 = h1Element.getBoundingClientRect();
+
+            const centerX = (rect: DOMRect) => rect.left + (rect.width / 2);
+            const centerY = (rect: DOMRect) => rect.top + (rect.height / 2);
+
+            return {
+              topAOffset: Math.abs(centerX(topA) - centerX(a8)),
+              bottomHOffset: Math.abs(centerX(bottomH) - centerX(h1)),
+              left8Offset: Math.abs(centerY(left8) - centerY(a8)),
+              right1Offset: Math.abs(centerY(right1) - centerY(h1)),
+              topInsideBoard: topA.bottom <= a8.top,
+              bottomInsideBoard: bottomH.top >= h1.bottom,
+              leftInsideBoard: left8.right <= a8.left,
+              rightInsideBoard: right1.left >= h1.right
+            };
+          });
+
+          expect(alignment?.error, JSON.stringify(alignment)).toBeUndefined();
+          expect(alignment?.topAOffset).toBeLessThan(COORDINATE_ALIGNMENT_TOLERANCE_PX);
+          expect(alignment?.bottomHOffset).toBeLessThan(COORDINATE_ALIGNMENT_TOLERANCE_PX);
+          expect(alignment?.left8Offset).toBeLessThan(COORDINATE_ALIGNMENT_TOLERANCE_PX);
+          expect(alignment?.right1Offset).toBeLessThan(COORDINATE_ALIGNMENT_TOLERANCE_PX);
+          expect(alignment?.topInsideBoard).toBe(true);
+          expect(alignment?.bottomInsideBoard).toBe(true);
+          expect(alignment?.leftInsideBoard).toBe(true);
+          expect(alignment?.rightInsideBoard).toBe(true);
         }
       },
       {
