@@ -105,10 +105,12 @@
 
   .coordinate-strip.left {
     grid-column: 1;
+    padding-right: 0.14rem;
   }
 
   .coordinate-strip.right {
     grid-column: 3;
+    padding-left: 0.14rem;
   }
 
   .coordinate {

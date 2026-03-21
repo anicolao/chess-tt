@@ -3,6 +3,7 @@ import { TestStepHelper } from '../helpers/test-step-helper';
 
 const CENTERING_TOLERANCE_PX = 24;
 const COORDINATE_ALIGNMENT_TOLERANCE_PX = 2;
+const COORDINATE_EDGE_PADDING_MIN_PX = 1;
 const LANDSCAPE_VIEWPORT = { width: 1024, height: 768 };
 const PORTRAIT_VIEWPORT = { width: 768, height: 1024 };
 
@@ -73,6 +74,8 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
               bottomHOffset: Math.abs(centerX(bottomH) - centerX(h1)),
               left8Offset: Math.abs(centerY(left8) - centerY(a8)),
               right1Offset: Math.abs(centerY(right1) - centerY(h1)),
+              left8Gap: a8.left - left8.right,
+              right1Gap: right1.left - h1.right,
               topInsideBoard: topA.bottom <= a8.top,
               bottomInsideBoard: bottomH.top >= h1.bottom,
               leftInsideBoard: left8.right <= a8.left,
@@ -85,6 +88,8 @@ test('MVP board selection highlights legal moves', async ({ page }, testInfo) =>
           expect(alignment?.bottomHOffset).toBeLessThan(COORDINATE_ALIGNMENT_TOLERANCE_PX);
           expect(alignment?.left8Offset).toBeLessThan(COORDINATE_ALIGNMENT_TOLERANCE_PX);
           expect(alignment?.right1Offset).toBeLessThan(COORDINATE_ALIGNMENT_TOLERANCE_PX);
+          expect(alignment?.left8Gap).toBeGreaterThanOrEqual(COORDINATE_EDGE_PADDING_MIN_PX);
+          expect(alignment?.right1Gap).toBeGreaterThanOrEqual(COORDINATE_EDGE_PADDING_MIN_PX);
           expect(alignment?.topInsideBoard).toBe(true);
           expect(alignment?.bottomInsideBoard).toBe(true);
           expect(alignment?.leftInsideBoard).toBe(true);
