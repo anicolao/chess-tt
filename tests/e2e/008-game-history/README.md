@@ -1,6 +1,6 @@
 # New Series Reset
 
-Verify that the New Series dialog starts from the default player names and clears completed history when a new series begins.
+Verify that the New Series dialog uses You/Opponent labels, shows the randomized opening colour assignment, and clears completed history when a new series begins.
 
 ## New Series opens with the default player names ready to edit
 
@@ -8,7 +8,7 @@ Verify that the New Series dialog starts from the default player names and clear
 
 ### Verifications
 - [x] The New Series dialog explains the random first-colour assignment and alternation
-- [x] The top and bottom player name fields start from Player 1 and Player 2
+- [x] The dialog relabels the default players as You and Opponent for the invoking edge
 
 ## Starting a new series clears the previous results and returns export to its fresh state
 
@@ -16,6 +16,7 @@ Verify that the New Series dialog starts from the default player names and clear
 
 ### Verifications
 - [x] The completed series history is cleared for the new matchup
+- [x] The dialog shows the randomized opening colours for you and your opponent
 - [x] Export is disabled again until the new series has recorded moves
 - [x] The new series stores the updated Carol and Dana player names for later games
 

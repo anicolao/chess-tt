@@ -7,7 +7,7 @@ Verify that seat-based presets and custom time controls can be configured from s
 ![Board theme presets and custom colours can be selected from settings](./screenshots/000-board-theme-presets.png)
 
 ### Verifications
-- [x] The board colour presets sit below the dialog heading and above the time controls
+- [x] The board colour presets sit below the dialog heading and stay visually separated from the time controls
 - [x] Selecting the green preset updates the live board square colours immediately
 
 ## Custom seat times are applied independently

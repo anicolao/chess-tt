@@ -6,7 +6,7 @@ test('New Series resets completed history and collects default player names', as
   const tester = new TestStepHelper(page, testInfo);
   tester.setMetadata(
     'New Series Reset',
-    'Verify that the New Series dialog starts from the default player names and clears completed history when a new series begins.'
+    'Verify that the New Series dialog uses You/Opponent labels, shows the randomized opening colour assignment, and clears completed history when a new series begins.'
   );
 
   await page.addInitScript((payload) => {
@@ -61,11 +61,15 @@ test('New Series resets completed history and collects default player names', as
       reviewGameNumber: 1
     }
   });
+  await page.addInitScript(() => {
+    window.__seriesWhiteSeatRandomValue = 0.1;
+  });
 
   await page.goto('/');
   await expect(page.locator('[data-app-ready="true"]')).toBeVisible();
   await page.getByRole('button', { name: /Open bottom seat settings/i }).click();
   await page.getByRole('button', { name: 'New Series' }).click();
+  await expect(page.locator('.series-dialog')).toBeVisible();
 
   await tester.step('new-series-dialog', {
     description: 'New Series opens with the default player names ready to edit',
@@ -73,22 +77,22 @@ test('New Series resets completed history and collects default player names', as
       {
         spec: 'The New Series dialog explains the random first-colour assignment and alternation',
         check: async () => {
-          await expect(page.getByRole('dialog', { name: 'New series' })).toContainText('randomly assign White');
-          await expect(page.getByRole('dialog', { name: 'New series' })).toContainText('alternate colours each game');
+          await expect(page.locator('.series-dialog')).toContainText('randomly decide who gets White');
+          await expect(page.locator('.series-dialog')).toContainText('alternate colours each game');
         }
       },
       {
-        spec: 'The top and bottom player name fields start from Player 1 and Player 2',
+        spec: 'The dialog relabels the default players as You and Opponent for the invoking edge',
         check: async () => {
-          await expect(page.getByLabel('Top player name')).toHaveValue('Player 1');
-          await expect(page.getByLabel('Bottom player name')).toHaveValue('Player 2');
+          await expect(page.getByLabel('Your name')).toHaveValue('Player 2');
+          await expect(page.getByLabel('Opponent name')).toHaveValue('Player 1');
         }
       }
     ]
   });
 
-  await page.getByLabel('Top player name').fill('Carol');
-  await page.getByLabel('Bottom player name').fill('Dana');
+  await page.getByLabel('Your name').fill('Dana');
+  await page.getByLabel('Opponent name').fill('Carol');
   await page.getByRole('button', { name: 'Start series' }).click();
   await page.getByRole('button', { name: /Open bottom seat settings/i }).click();
 
@@ -99,6 +103,14 @@ test('New Series resets completed history and collects default player names', as
         spec: 'The completed series history is cleared for the new matchup',
         check: async () => {
           await expect(page.getByRole('dialog', { name: 'Game settings' })).toContainText('No completed games yet.');
+        }
+      },
+      {
+        spec: 'The dialog shows the randomized opening colours for you and your opponent',
+        check: async () => {
+          await expect(page.getByRole('dialog', { name: 'Game settings' })).toContainText(
+            'This game: You have black; opponent has white.'
+          );
         }
       },
       {

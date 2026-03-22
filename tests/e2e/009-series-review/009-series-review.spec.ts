@@ -2,6 +2,9 @@ import { test, expect } from '@playwright/test';
 import { TestStepHelper } from '../helpers/test-step-helper';
 import { STORAGE_KEY } from '../../../src/lib/redux/persistence.js';
 
+// Allow a few pixels for sub-pixel layout rounding while still catching any meaningful internal scroll.
+const SCROLL_TOLERANCE = 8;
+
 test('Completed series games stay reviewable and exportable from settings', async ({ page }, testInfo) => {
   const tester = new TestStepHelper(page, testInfo);
   tester.setMetadata(
@@ -63,7 +66,7 @@ test('Completed series games stay reviewable and exportable from settings', asyn
   await page.getByRole('button', { name: /Open bottom seat settings/i }).click();
 
   await tester.step('series-history-table', {
-    description: 'Settings lists completed games while the next game flips White to the opposite seat',
+    description: 'Settings lists completed games with You and Opponent labels while the next game flips White to the opposite seat',
     verifications: [
       {
         spec: 'The second game gives White to the top seat and Black to the bottom seat',
@@ -73,11 +76,26 @@ test('Completed series games stay reviewable and exportable from settings', asyn
         }
       },
       {
-        spec: 'The prior games table records Bob versus Alice with the 0-1 result token',
+        spec: 'The prior games table records you versus your opponent with the 0-1 result token',
         check: async () => {
+          await expect(page.locator('.history-table')).toContainText('You');
+          await expect(page.locator('.history-table')).toContainText('Opponent');
           await expect(page.locator('.history-table')).toContainText('Bob');
           await expect(page.locator('.history-table')).toContainText('Alice');
           await expect(page.locator('.history-table')).toContainText('0-1');
+        }
+      },
+      {
+        spec: 'The shorter settings layout fits without internal scrolling in the default landscape viewport',
+        check: async () => {
+          await expect.poll(async () => page.evaluate(() => {
+            const dialog = document.querySelector('.settings-dialog');
+            if (!(dialog instanceof HTMLElement)) {
+              return Number.POSITIVE_INFINITY;
+            }
+
+            return dialog.scrollHeight - dialog.clientHeight;
+          })).toBeLessThanOrEqual(SCROLL_TOLERANCE);
         }
       }
     ]

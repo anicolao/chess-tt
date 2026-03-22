@@ -22,6 +22,7 @@
   let activeSettingsCorner = null;
   let activeExport = null;
   let isSeriesSetupOpen = false;
+  let seriesSetupSeat = 'bottom';
   let clockIntervalId = null;
   let audioContext = null;
   let lastPlayedMoveCount = 0;
@@ -169,6 +170,7 @@
   }
 
   function openSeriesSetup() {
+    seriesSetupSeat = activeSettingsSeat;
     closeSettings();
     isSeriesSetupOpen = true;
   }
@@ -177,8 +179,16 @@
     isSeriesSetupOpen = false;
   }
 
+  function getSeriesRandomValue() {
+    if (typeof window !== 'undefined' && typeof window.__seriesWhiteSeatRandomValue === 'number') {
+      return window.__seriesWhiteSeatRandomValue;
+    }
+
+    return Math.random();
+  }
+
   function createRandomStartingWhiteSeat() {
-    return Math.random() < 0.5 ? 'top' : 'bottom';
+    return getSeriesRandomValue() < 0.5 ? 'top' : 'bottom';
   }
 
   function startSeries(players) {
@@ -282,6 +292,7 @@
             {canExport}
             boardThemeSettings={state.boardThemeSettings}
             timeSettings={state.timerSettings}
+            seriesPlayers={state.seriesPlayers}
             seriesHistory={state.seriesHistory}
             reviewGameNumber={state.reviewGameNumber}
             {canUndo}
@@ -327,6 +338,7 @@
   {#if isSeriesSetupOpen}
     <SeriesSetupDialog
       players={state.seriesPlayers}
+      invokingSeat={seriesSetupSeat}
       onClose={closeSeriesSetup}
       onStartSeries={startSeries}
     />
