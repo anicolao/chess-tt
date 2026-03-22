@@ -10,6 +10,7 @@
   export let isSelected;
   export let isHighlighted;
   export let isLastMove;
+  export let isCheckedKing;
   export let onPress = () => {};
 </script>
 
@@ -20,9 +21,11 @@
   class:selected={isSelected}
   class:highlighted={isHighlighted}
   class:last-move={isLastMove}
+  class:checked-king={isCheckedKing}
   class="square"
   aria-label={ariaLabel}
   data-square={square}
+  data-checked-king={isCheckedKing ? 'true' : undefined}
   onclick={() => onPress(square)}
 >
   {#if symbol}
@@ -35,6 +38,9 @@
   {/if}
   {#if isHighlighted}
     <span class="highlight-marker" aria-hidden="true"></span>
+  {/if}
+  {#if isCheckedKing}
+    <span class="check-glow" aria-hidden="true"></span>
   {/if}
 </button>
 
@@ -91,6 +97,16 @@
     border-radius: 999px;
     background: rgba(36, 44, 57, 0.24);
     box-shadow: 0 0 0 0.22rem rgba(142, 225, 255, 0.32);
+    pointer-events: none;
+  }
+
+  .check-glow {
+    position: absolute;
+    inset: 0.14rem;
+    border-radius: 0.72rem;
+    box-shadow:
+      inset 0 0 0 0.2rem rgba(255, 72, 72, 0.95),
+      0 0 1rem rgba(255, 72, 72, 0.4);
     pointer-events: none;
   }
 </style>

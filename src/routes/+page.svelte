@@ -6,7 +6,7 @@
   import GameInfo from '$lib/components/GameInfo.svelte';
   import SettingsDialog from '$lib/components/SettingsDialog.svelte';
   import { buildExportUrl, getExportPlatform } from '$lib/game/game-export';
-  import { getBoardRows } from '$lib/game/chess-game';
+  import { getBoardRows, getCheckedKingSquare } from '$lib/game/chess-game';
   import { appStore, gameActions, gameState } from '$lib/redux/store';
 
   const playerSettingsAnchors = [
@@ -19,9 +19,89 @@
   let activeSettingsCorner = null;
   let activeExport = null;
   let clockIntervalId = null;
+  let audioContext = null;
+  let lastMoveFeedbackKey = null;
+
+  function createGainEnvelope(context, startTime, peakGain, sustainGain, endTime) {
+    const gainNode = context.createGain();
+    gainNode.gain.setValueAtTime(0.0001, startTime);
+    gainNode.gain.exponentialRampToValueAtTime(peakGain, startTime + 0.008);
+    gainNode.gain.exponentialRampToValueAtTime(sustainGain, startTime + 0.04);
+    gainNode.gain.exponentialRampToValueAtTime(0.0001, endTime);
+    gainNode.connect(context.destination);
+    return gainNode;
+  }
+
+  function ensureAudioContext() {
+    if (audioContext) {
+      return audioContext;
+    }
+
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) {
+      return null;
+    }
+
+    audioContext = new AudioContextCtor();
+    return audioContext;
+  }
+
+  function playTone({ type, frequency, peakGain, sustainGain, durationSeconds }) {
+    const context = ensureAudioContext();
+    if (!context) {
+      return;
+    }
+
+    if (context.state === 'suspended') {
+      context.resume().catch(() => {});
+    }
+
+    const startTime = context.currentTime;
+    const endTime = startTime + durationSeconds;
+    const gainNode = createGainEnvelope(context, startTime, peakGain, sustainGain, endTime);
+    const oscillator = context.createOscillator();
+
+    oscillator.type = type;
+    oscillator.frequency.setValueAtTime(frequency, startTime);
+    oscillator.connect(gainNode);
+    oscillator.start(startTime);
+    oscillator.stop(endTime);
+  }
+
+  function playMoveSound(isCheck) {
+    if (isCheck) {
+      playTone({
+        type: 'sine',
+        frequency: 196,
+        peakGain: 0.09,
+        sustainGain: 0.045,
+        durationSeconds: 0.22
+      });
+      return;
+    }
+
+    playTone({
+      type: 'triangle',
+      frequency: 880,
+      peakGain: 0.028,
+      sustainGain: 0.01,
+      durationSeconds: 0.06
+    });
+  }
+
+  function getMoveFeedbackKey(gameState) {
+    const move = gameState?.lastMove;
+
+    if (!move) {
+      return null;
+    }
+
+    return `${gameState.events.length}:${move.from}:${move.to}:${move.san ?? ''}`;
+  }
 
   onMount(() => {
     isHydrated = true;
+    lastMoveFeedbackKey = getMoveFeedbackKey($gameState);
     dispatch(gameActions.clockTicked(Date.now()));
     clockIntervalId = window.setInterval(() => {
       dispatch(gameActions.clockTicked(Date.now()));
@@ -36,7 +116,8 @@
   });
 
   $: state = $gameState;
-  $: boardRows = getBoardRows(state.currentFen, state.ui, state.lastMove);
+  $: checkedKingSquare = getCheckedKingSquare(state.currentFen);
+  $: boardRows = getBoardRows(state.currentFen, state.ui, state.lastMove, checkedKingSquare);
   $: canUndo = state.events.length > 1;
   $: canResign = state.status === 'active';
   $: canExport = state.history.length > 0;
@@ -44,6 +125,14 @@
   $: bottomSeatColor = state.timerSettings.seatColors.bottom;
   $: activeSeat = state.timerState.activeSeat;
   $: activeSettingsSeat = playerSettingsAnchors.find(({ corner }) => corner === activeSettingsCorner)?.seat ?? 'bottom';
+  $: if (isHydrated) {
+    const nextMoveFeedbackKey = getMoveFeedbackKey(state);
+
+    if (nextMoveFeedbackKey && nextMoveFeedbackKey !== lastMoveFeedbackKey) {
+      playMoveSound(Boolean(checkedKingSquare));
+      lastMoveFeedbackKey = nextMoveFeedbackKey;
+    }
+  }
 
   function toggleSettings(corner) {
     if (state.status === 'active' && state.timerState.activeSeat) {

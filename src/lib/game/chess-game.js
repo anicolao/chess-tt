@@ -42,7 +42,29 @@ export function pieceSymbol(piece) {
   return PIECE_SYMBOLS[piece.color][piece.type];
 }
 
-export function getBoardRows(fen, ui = {}, lastMove = null) {
+export function getCheckedKingSquare(fen) {
+  const chess = createChess(fen);
+  if (!chess.inCheck()) {
+    return null;
+  }
+
+  const checkedColor = chess.turn();
+
+  for (const rank of RANKS) {
+    for (const file of FILES) {
+      const square = `${file}${rank}`;
+      const piece = chess.get(square);
+
+      if (piece?.type === 'k' && piece.color === checkedColor) {
+        return square;
+      }
+    }
+  }
+
+  return null;
+}
+
+export function getBoardRows(fen, ui = {}, lastMove = null, checkedKingSquare = getCheckedKingSquare(fen)) {
   const chess = createChess(fen);
   const selectedSquare = ui.selectedSquare;
   const highlightedSquares = ui.highlightedSquares ?? [];
@@ -64,7 +86,8 @@ export function getBoardRows(fen, ui = {}, lastMove = null) {
         isLight,
         isSelected: selectedSquare === square,
         isHighlighted: highlightedSquares.includes(square),
-        isLastMove: Boolean(lastMove && (lastMove.from === square || lastMove.to === square))
+        isLastMove: Boolean(lastMove && (lastMove.from === square || lastMove.to === square)),
+        isCheckedKing: checkedKingSquare === square
       };
     })
   );
