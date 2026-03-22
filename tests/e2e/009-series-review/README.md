@@ -1,6 +1,6 @@
 # Series Review and Export
 
-Verify that completed series games remain listed in settings, that colours alternate for the next game, and that prior games can be reopened for export.
+Verify that completed series games remain listed in settings, that colors alternate for the next game, and that prior games can be reopened for export.
 
 ## Settings lists completed games while the next game flips White to the opposite seat
 

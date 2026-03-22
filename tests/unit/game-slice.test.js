@@ -106,7 +106,7 @@ describe('game reducer', () => {
     expect(hydrated.events.map((event) => event.type)).toEqual(['game.started', 'move.played', 'game.resigned']);
   });
 
-  test('new series names players and randomizes the first white seat from the payload', () => {
+  test('new series names players and assigns the first white seat from the payload', () => {
     const state = gameReducer(undefined, gameActions.newSeriesRequested({
       players: {
         top: 'Alice',

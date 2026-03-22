@@ -17,4 +17,5 @@ Verify that the New Series dialog starts from the default player names and clear
 ### Verifications
 - [x] The completed series history is cleared for the new matchup
 - [x] Export is disabled again until the new series has recorded moves
+- [x] The new series stores the updated Carol and Dana player names for later games
 
