@@ -42,6 +42,9 @@ export function pieceSymbol(piece) {
   return PIECE_SYMBOLS[piece.color][piece.type];
 }
 
+/**
+ * Returns the square of the side-to-move king when that king is in check, or null otherwise.
+ */
 export function getCheckedKingSquare(fen) {
   const chess = createChess(fen);
   if (!chess.inCheck()) {
@@ -64,10 +67,11 @@ export function getCheckedKingSquare(fen) {
   return null;
 }
 
-export function getBoardRows(fen, ui = {}, lastMove = null, checkedKingSquare = getCheckedKingSquare(fen)) {
+export function getBoardRows(fen, ui = {}, lastMove = null, checkedKingSquare = null) {
   const chess = createChess(fen);
   const selectedSquare = ui.selectedSquare;
   const highlightedSquares = ui.highlightedSquares ?? [];
+  const resolvedCheckedKingSquare = checkedKingSquare ?? getCheckedKingSquare(fen);
 
   return RANKS.map((rank) =>
     FILES.map((file, fileIndex) => {
@@ -87,7 +91,7 @@ export function getBoardRows(fen, ui = {}, lastMove = null, checkedKingSquare = 
         isSelected: selectedSquare === square,
         isHighlighted: highlightedSquares.includes(square),
         isLastMove: Boolean(lastMove && (lastMove.from === square || lastMove.to === square)),
-        isCheckedKing: checkedKingSquare === square
+        isCheckedKing: resolvedCheckedKingSquare === square
       };
     })
   );

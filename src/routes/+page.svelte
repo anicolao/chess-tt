@@ -13,6 +13,8 @@
     { seat: 'top', corner: 'top-left' },
     { seat: 'bottom', corner: 'bottom-right' }
   ];
+  const MOVE_SOUND_ATTACK_SECONDS = 0.008;
+  const MOVE_SOUND_DECAY_SECONDS = 0.04;
   const dispatch = (action) => appStore.dispatch(action);
   // This flips after hydration so interaction tests can wait on a deterministic ready marker.
   let isHydrated = false;
@@ -20,13 +22,16 @@
   let activeExport = null;
   let clockIntervalId = null;
   let audioContext = null;
-  let lastMoveFeedbackKey = null;
+  let lastPlayedMoveCount = 0;
 
+  /**
+   * Builds a short attack/decay envelope for synthesized move sounds and fades it back out by endTime.
+   */
   function createGainEnvelope(context, startTime, peakGain, sustainGain, endTime) {
     const gainNode = context.createGain();
     gainNode.gain.setValueAtTime(0.0001, startTime);
-    gainNode.gain.exponentialRampToValueAtTime(peakGain, startTime + 0.008);
-    gainNode.gain.exponentialRampToValueAtTime(sustainGain, startTime + 0.04);
+    gainNode.gain.exponentialRampToValueAtTime(peakGain, startTime + MOVE_SOUND_ATTACK_SECONDS);
+    gainNode.gain.exponentialRampToValueAtTime(sustainGain, startTime + MOVE_SOUND_DECAY_SECONDS);
     gainNode.gain.exponentialRampToValueAtTime(0.0001, endTime);
     gainNode.connect(context.destination);
     return gainNode;
@@ -46,6 +51,9 @@
     return audioContext;
   }
 
+  /**
+   * Plays a single synthesized tone for move feedback using the provided oscillator type, frequency, and gain curve.
+   */
   function playTone({ type, frequency, peakGain, sustainGain, durationSeconds }) {
     const context = ensureAudioContext();
     if (!context) {
@@ -89,19 +97,9 @@
     });
   }
 
-  function getMoveFeedbackKey(gameState) {
-    const move = gameState?.lastMove;
-
-    if (!move) {
-      return null;
-    }
-
-    return `${gameState.events.length}:${move.from}:${move.to}:${move.san ?? ''}`;
-  }
-
   onMount(() => {
     isHydrated = true;
-    lastMoveFeedbackKey = getMoveFeedbackKey($gameState);
+    lastPlayedMoveCount = $gameState.history.length;
     dispatch(gameActions.clockTicked(Date.now()));
     clockIntervalId = window.setInterval(() => {
       dispatch(gameActions.clockTicked(Date.now()));
@@ -125,12 +123,15 @@
   $: bottomSeatColor = state.timerSettings.seatColors.bottom;
   $: activeSeat = state.timerState.activeSeat;
   $: activeSettingsSeat = playerSettingsAnchors.find(({ corner }) => corner === activeSettingsCorner)?.seat ?? 'bottom';
-  $: if (isHydrated) {
-    const nextMoveFeedbackKey = getMoveFeedbackKey(state);
-
-    if (nextMoveFeedbackKey && nextMoveFeedbackKey !== lastMoveFeedbackKey) {
-      playMoveSound(Boolean(checkedKingSquare));
-      lastMoveFeedbackKey = nextMoveFeedbackKey;
+  $: {
+    if (isHydrated) {
+      // Only announce newly added moves; rewinds like undo reduce history length without replaying sounds.
+      if (state.history.length < lastPlayedMoveCount) {
+        lastPlayedMoveCount = state.history.length;
+      } else if (state.history.length > lastPlayedMoveCount && state.lastMove) {
+        playMoveSound(Boolean(checkedKingSquare));
+        lastPlayedMoveCount = state.history.length;
+      }
     }
   }
 
