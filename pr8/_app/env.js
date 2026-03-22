@@ -1,0 +1,1 @@
+export const env={"PUBLIC_BASE_PATH":"/chess-tt/pr8"}
