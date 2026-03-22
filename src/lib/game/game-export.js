@@ -38,16 +38,16 @@ export function buildMoveText(history = [], resultToken = '*') {
     const whiteMove = history[moveIndex];
     const blackMove = history[moveIndex + 1];
 
-    moveText.push(`${Math.floor(moveIndex / 2) + 1}. ${normalizePgnWhitespace(whiteMove?.san)}`);
+    moveText.push(`${Math.floor(moveIndex / 2) + 1}. ${normalizePgnWhitespace(whiteMove.san)}`);
 
     if (blackMove) {
       moveText.push(normalizePgnWhitespace(blackMove.san));
     }
   }
 
-  moveText.push(resultToken);
+  moveText.push(normalizePgnWhitespace(resultToken));
 
-  return normalizePgnWhitespace(moveText.join(' '));
+  return moveText.join(' ').trim();
 }
 
 export function exportGameToPgn(gameState = {}) {
