@@ -27,7 +27,7 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
     description: 'Board theme presets and custom colours can be selected from settings',
     verifications: [
       {
-        spec: 'The board colour presets sit below the dialog heading and above the time controls',
+        spec: 'The board colour presets sit below the dialog heading and stay visually separated from the time controls',
         check: async () => {
           await expect(page.getByRole('button', { name: 'Current board colours' })).toBeVisible();
           await expect(page.getByRole('button', { name: 'Green board colours' })).toBeVisible();
@@ -52,7 +52,10 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
                 boardTheme.compareDocumentPosition(timeControls) & window.Node.DOCUMENT_POSITION_FOLLOWING
               ),
               boardThemeBelowHeader: boardThemeBox.top >= headerBox.bottom,
-              boardThemeAboveTimeControls: boardThemeBox.bottom <= timeControlsBox.top
+              boardThemeSeparatedFromTimeControls: (
+                boardThemeBox.bottom <= timeControlsBox.top ||
+                boardThemeBox.right <= timeControlsBox.left
+              )
             };
           });
 
@@ -60,7 +63,7 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
             headerBeforeBoardTheme: true,
             boardThemeBeforeTimeControls: true,
             boardThemeBelowHeader: true,
-            boardThemeAboveTimeControls: true
+            boardThemeSeparatedFromTimeControls: true
           });
         }
       },

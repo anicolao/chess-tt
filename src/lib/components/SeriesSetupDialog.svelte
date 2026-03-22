@@ -1,31 +1,33 @@
 <script>
+  import { onMount } from 'svelte';
+
   export let players = {
     top: 'Player 1',
     bottom: 'Player 2'
   };
+  export let invokingSeat = 'bottom';
   export let onClose = () => {};
   export let onStartSeries = () => {};
 
-  let topName = players.top;
-  let bottomName = players.bottom;
+  $: yourSeat = invokingSeat === 'top' ? 'top' : 'bottom';
+  $: opponentSeat = yourSeat === 'top' ? 'bottom' : 'top';
+  let yourName = '';
+  let opponentName = '';
 
-  $: if (players.top !== topName && !topName.trim()) {
-    topName = players.top;
-  }
-
-  $: if (players.bottom !== bottomName && !bottomName.trim()) {
-    bottomName = players.bottom;
-  }
+  onMount(() => {
+    yourName = players?.[yourSeat] ?? '';
+    opponentName = players?.[opponentSeat] ?? '';
+  });
 
   function startSeries() {
     onStartSeries({
-      top: topName,
-      bottom: bottomName
+      [yourSeat]: yourName,
+      [opponentSeat]: opponentName
     });
   }
 </script>
 
-<div class="series-overlay">
+<div class:rotated-view={yourSeat === 'top'} class="series-overlay">
   <div class="series-dialog" role="dialog" aria-label="New series">
     <div class="header">
       <div>
@@ -36,18 +38,18 @@
     </div>
 
     <p class="message">
-      Enter the player names for each side of the table. The first game will randomly assign White to the
-      top or bottom seat, then alternate colours each game in the series.
+      Enter your name and your opponent&apos;s name. The first game will randomly decide who gets White,
+      then alternate colours each game in the series.
     </p>
 
     <div class="player-grid">
       <label>
-        <span>Top player name</span>
-        <input type="text" bind:value={topName} maxlength="40" />
+        <span>Your name</span>
+        <input type="text" bind:value={yourName} maxlength="40" />
       </label>
       <label>
-        <span>Bottom player name</span>
-        <input type="text" bind:value={bottomName} maxlength="40" />
+        <span>Opponent name</span>
+        <input type="text" bind:value={opponentName} maxlength="40" />
       </label>
     </div>
 
@@ -70,11 +72,15 @@
     backdrop-filter: blur(10px);
   }
 
+  .rotated-view {
+    transform: rotate(180deg);
+  }
+
   .series-dialog {
     display: grid;
-    gap: 1rem;
+    gap: 0.85rem;
     width: min(28rem, calc(100vw - 2rem));
-    padding: 1.2rem;
+    padding: 1rem;
     border-radius: 1.2rem;
     background: rgba(10, 16, 23, 0.97);
     box-shadow:
@@ -110,11 +116,12 @@
 
   .message {
     color: #d8e6f3;
+    line-height: 1.35;
   }
 
   .player-grid {
     display: grid;
-    gap: 0.85rem;
+    gap: 0.75rem;
   }
 
   label {
@@ -125,8 +132,8 @@
   }
 
   input {
-    min-height: 3rem;
-    padding: 0.7rem 0.9rem;
+    min-height: 2.8rem;
+    padding: 0.6rem 0.85rem;
     border: none;
     border-radius: 0.95rem;
     background: rgba(255, 255, 255, 0.08);
@@ -152,8 +159,8 @@
 
   .secondary-button,
   .primary-button {
-    min-height: 3rem;
-    padding: 0.75rem 1rem;
+    min-height: 2.8rem;
+    padding: 0.7rem 0.95rem;
     border-radius: 999px;
     font-weight: 700;
   }
