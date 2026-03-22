@@ -77,7 +77,7 @@ export function getBoardRows(fen, ui = {}, lastMove = null, checkedKingSquare = 
     FILES.map((file, fileIndex) => {
       const square = `${file}${rank}`;
       const piece = chess.get(square);
-      const isLight = (fileIndex + rank) % 2 === 1;
+      const isLight = (fileIndex + rank) % 2 === 0;
 
       return {
         square,
