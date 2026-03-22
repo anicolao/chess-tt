@@ -15,14 +15,108 @@ import {
   normalizeClockState,
   normalizeTimeSettings
 } from '$lib/game/time-controls';
+import { getResultToken } from '$lib/game/game-export';
 
 const STORAGE_VERSION = 1;
+const DEFAULT_SERIES_PLAYERS = {
+  top: 'Player 1',
+  bottom: 'Player 2'
+};
 
 function createUiState() {
   return {
     selectedSquare: null,
     highlightedSquares: [],
     draggedSquare: null
+  };
+}
+
+function getOppositeSeat(seat) {
+  return seat === 'top' ? 'bottom' : 'top';
+}
+
+function normalizePlayerName(name, fallback) {
+  const trimmed = String(name ?? '').trim();
+  return trimmed || fallback;
+}
+
+function normalizeSeriesPlayers(players = {}) {
+  return {
+    top: normalizePlayerName(players.top, DEFAULT_SERIES_PLAYERS.top),
+    bottom: normalizePlayerName(players.bottom, DEFAULT_SERIES_PLAYERS.bottom)
+  };
+}
+
+function createSeatColorsForSeriesGame(startingWhiteSeat = 'bottom', completedGames = 0) {
+  const normalizedStartingSeat = startingWhiteSeat === 'top' ? 'top' : 'bottom';
+  const whiteSeat = completedGames % 2 === 0
+    ? normalizedStartingSeat
+    : getOppositeSeat(normalizedStartingSeat);
+
+  return whiteSeat === 'top'
+    ? { top: 'w', bottom: 'b' }
+    : { top: 'b', bottom: 'w' };
+}
+
+function createSeriesTimeSettings(baseTimeSettings, startingWhiteSeat, completedGames = 0) {
+  return normalizeTimeSettings({
+    ...baseTimeSettings,
+    seatColors: createSeatColorsForSeriesGame(startingWhiteSeat, completedGames)
+  });
+}
+
+function sanitizeStoredEvents(events = []) {
+  return events
+    .filter((event) => event && typeof event.type === 'string')
+    .map(({ type, from, to, color, promotion }) => ({
+      type,
+      from,
+      to,
+      color,
+      promotion
+    }));
+}
+
+function normalizeSeriesHistory(historyEntries = []) {
+  return historyEntries
+    .map((entry, index) => {
+      if (!entry || !Array.isArray(entry.events) || entry.events.length === 0) {
+        return null;
+      }
+
+      const whiteSeat = entry.whiteSeat === 'top' ? 'top' : 'bottom';
+      const blackSeat = getOppositeSeat(whiteSeat);
+
+      return {
+        gameNumber: Number.isInteger(entry.gameNumber) && entry.gameNumber > 0 ? entry.gameNumber : index + 1,
+        result: typeof entry.result === 'string' ? entry.result : getResultToken(entry),
+        status: typeof entry.status === 'string' ? entry.status : 'active',
+        winner: entry.winner === 'white' || entry.winner === 'black' ? entry.winner : null,
+        whiteSeat,
+        blackSeat,
+        whiteName: normalizePlayerName(entry.whiteName, DEFAULT_SERIES_PLAYERS[whiteSeat]),
+        blackName: normalizePlayerName(entry.blackName, DEFAULT_SERIES_PLAYERS[blackSeat]),
+        events: sanitizeStoredEvents(entry.events),
+        boardThemeSettings: normalizeBoardThemeSettings(entry.boardThemeSettings ?? createDefaultBoardThemeSettings()),
+        timerSettings: normalizeTimeSettings({
+          ...entry.timerSettings,
+          seatColors: whiteSeat === 'top'
+            ? { top: 'w', bottom: 'b' }
+            : { top: 'b', bottom: 'w' }
+        })
+      };
+    })
+    .filter(Boolean);
+}
+
+function createSeriesOptions(state, overrides = {}) {
+  return {
+    seriesPlayers: 'seriesPlayers' in overrides ? overrides.seriesPlayers : state.seriesPlayers,
+    seriesHistory: 'seriesHistory' in overrides ? overrides.seriesHistory : state.seriesHistory,
+    seriesStartingWhiteSeat: 'seriesStartingWhiteSeat' in overrides
+      ? overrides.seriesStartingWhiteSeat
+      : state.seriesStartingWhiteSeat,
+    reviewGameNumber: 'reviewGameNumber' in overrides ? overrides.reviewGameNumber : state.reviewGameNumber
   };
 }
 
@@ -409,6 +503,13 @@ export function rebuildGameState(events = [], options = {}) {
     promotion: move.promotion ?? null
   }));
 
+  const seriesPlayers = normalizeSeriesPlayers(options.seriesPlayers);
+  const seriesHistory = normalizeSeriesHistory(options.seriesHistory);
+  const seriesStartingWhiteSeat = options.seriesStartingWhiteSeat === 'top' ? 'top' : 'bottom';
+  const reviewGameNumber = Number.isInteger(options.reviewGameNumber) && options.reviewGameNumber > 0
+    ? options.reviewGameNumber
+    : null;
+
   const baseState = {
     storageVersion: STORAGE_VERSION,
     events: sanitizedEvents.map((event, index) => ({ ...event, id: index })),
@@ -424,7 +525,11 @@ export function rebuildGameState(events = [], options = {}) {
     boardThemeSettings: normalizeBoardThemeSettings(
       options.boardThemeSettings ?? createDefaultBoardThemeSettings()
     ),
-    ui: createUiState()
+    ui: createUiState(),
+    seriesPlayers,
+    seriesHistory,
+    seriesStartingWhiteSeat,
+    reviewGameNumber
   };
 
   const timerSettings = normalizeTimeSettings(options.timerSettings ?? createDefaultTimeSettings());
@@ -506,10 +611,11 @@ function createMoveState(state, from, to, now) {
     moveEvent
   ], {
     boardThemeSettings: timedState.boardThemeSettings,
-    timerSettings: timedState.timerSettings
+    timerSettings: timedState.timerSettings,
+    ...createSeriesOptions(timedState, { reviewGameNumber: null })
   });
 
-  return {
+  return archiveCompletedGameIfNeeded({
     ...next,
     timerSettings: timedState.timerSettings,
     timerState: advanceTimerAfterMove(
@@ -520,7 +626,7 @@ function createMoveState(state, from, to, now) {
       next.status,
       now
     )
-  };
+  });
 }
 
 function exportEvents(state) {
@@ -531,6 +637,69 @@ function exportEvents(state) {
     color,
     promotion
   }));
+}
+
+function eventsMatch(left = [], right = []) {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  return left.every((event, index) => {
+    const other = right[index];
+    return (
+      event?.type === other?.type &&
+      event?.from === other?.from &&
+      event?.to === other?.to &&
+      event?.color === other?.color &&
+      event?.promotion === other?.promotion
+    );
+  });
+}
+
+function createSeriesHistoryEntry(state, gameNumber = state.seriesHistory.length + 1) {
+  const whiteSeat = getSeatForColor(state.timerSettings.seatColors, 'w') ?? 'bottom';
+  const blackSeat = getOppositeSeat(whiteSeat);
+
+  return {
+    gameNumber,
+    result: getResultToken(state),
+    status: state.status,
+    winner: state.winner,
+    whiteSeat,
+    blackSeat,
+    whiteName: state.seriesPlayers[whiteSeat],
+    blackName: state.seriesPlayers[blackSeat],
+    events: exportEvents(state),
+    boardThemeSettings: state.boardThemeSettings,
+    timerSettings: state.timerSettings
+  };
+}
+
+function archiveCompletedGameIfNeeded(state) {
+  if (state.status === 'active') {
+    return state;
+  }
+
+  const currentEvents = exportEvents(state);
+  const existingEntry = state.seriesHistory.find((entry) => eventsMatch(entry.events, currentEvents));
+
+  if (existingEntry) {
+    return {
+      ...state,
+      reviewGameNumber: existingEntry.gameNumber
+    };
+  }
+
+  const nextGameNumber = state.seriesHistory.length + 1;
+
+  return {
+    ...state,
+    reviewGameNumber: nextGameNumber,
+    seriesHistory: [
+      ...state.seriesHistory,
+      createSeriesHistoryEntry(state, nextGameNumber)
+    ]
+  };
 }
 
 const initialState = rebuildGameState();
@@ -610,13 +779,40 @@ const gameSlice = createSlice({
     },
     newGameRequested(state, action) {
       const now = action.payload?.now;
+      const timerSettings = createSeriesTimeSettings(
+        state.timerSettings,
+        state.seriesStartingWhiteSeat,
+        state.seriesHistory.length
+      );
+
       return rebuildGameState(
         [{ type: 'game.started' }],
         {
           boardThemeSettings: state.boardThemeSettings,
-          timerSettings: state.timerSettings,
-          timerState: createInitialClockState(state.timerSettings, 'w', 'active', now),
-          now
+          timerSettings,
+          timerState: createInitialClockState(timerSettings, 'w', 'active', now),
+          now,
+          ...createSeriesOptions(state, { reviewGameNumber: null })
+        }
+      );
+    },
+    newSeriesRequested(state, action) {
+      const now = action.payload?.now;
+      const seriesPlayers = normalizeSeriesPlayers(action.payload?.players);
+      const seriesStartingWhiteSeat = action.payload?.startingWhiteSeat === 'top' ? 'top' : 'bottom';
+      const timerSettings = createSeriesTimeSettings(state.timerSettings, seriesStartingWhiteSeat, 0);
+
+      return rebuildGameState(
+        [{ type: 'game.started' }],
+        {
+          boardThemeSettings: state.boardThemeSettings,
+          timerSettings,
+          timerState: createInitialClockState(timerSettings, 'w', 'active', now),
+          now,
+          seriesPlayers,
+          seriesHistory: [],
+          seriesStartingWhiteSeat,
+          reviewGameNumber: null
         }
       );
     },
@@ -633,7 +829,8 @@ const gameSlice = createSlice({
         timerSettings: state.timerSettings,
         timerState: state.timerState,
         boardThemeSettings: state.boardThemeSettings,
-        now
+        now,
+        ...createSeriesOptions(state, { reviewGameNumber: null })
       });
       const clockArmed = nextState.history.length > 0;
       const activeSeat = nextState.status === 'active' && clockArmed && !isNoClockTimeSettings(state.timerSettings)
@@ -667,22 +864,41 @@ const gameSlice = createSlice({
         return timedState;
       }
 
-      return rebuildGameState([
+      return archiveCompletedGameIfNeeded(rebuildGameState([
         ...exportEvents(timedState),
         { type: 'game.resigned', color: timedState.turn }
       ], {
         boardThemeSettings: timedState.boardThemeSettings,
         timerSettings: timedState.timerSettings,
         timerState: timedState.timerState,
-        now
-      });
+        now,
+        ...createSeriesOptions(timedState, { reviewGameNumber: null })
+      }));
     },
     hydrateRequested(_state, action) {
       const events = action.payload?.events;
-      return rebuildGameState(events, {
+      return archiveCompletedGameIfNeeded(rebuildGameState(events, {
         boardThemeSettings: action.payload?.boardThemeSettings,
         timerSettings: action.payload?.timerSettings,
-        timerState: action.payload?.timerState
+        timerState: action.payload?.timerState,
+        seriesPlayers: action.payload?.seriesPlayers,
+        seriesHistory: action.payload?.seriesHistory,
+        seriesStartingWhiteSeat: action.payload?.seriesStartingWhiteSeat,
+        reviewGameNumber: action.payload?.reviewGameNumber
+      }));
+    },
+    historyGameSelected(state, action) {
+      const gameNumber = typeof action.payload === 'number' ? action.payload : action.payload?.gameNumber;
+      const selectedGame = state.seriesHistory.find((entry) => entry.gameNumber === gameNumber);
+
+      if (!selectedGame) {
+        return state;
+      }
+
+      return rebuildGameState(selectedGame.events, {
+        boardThemeSettings: selectedGame.boardThemeSettings,
+        timerSettings: selectedGame.timerSettings,
+        ...createSeriesOptions(state, { reviewGameNumber: selectedGame.gameNumber })
       });
     },
     boardThemeConfigured(state, action) {
@@ -692,7 +908,10 @@ const gameSlice = createSlice({
       };
     },
     timeControlsConfigured(state, action) {
-      const timeSettings = normalizeTimeSettings(action.payload);
+      const timeSettings = normalizeTimeSettings({
+        ...action.payload,
+        seatColors: state.timerSettings.seatColors
+      });
       const now = action.payload?.now;
 
       return {
@@ -708,7 +927,7 @@ const gameSlice = createSlice({
         return state;
       }
 
-      return applySynchronizedTimer(state, now);
+      return archiveCompletedGameIfNeeded(applySynchronizedTimer(state, now));
     }
   }
 });

@@ -11,7 +11,7 @@ export const EXPORT_PLATFORMS = [
   }
 ];
 
-function getResultToken({ status, winner } = {}) {
+export function getResultToken({ status, winner } = {}) {
   if (winner === 'white') {
     return '1-0';
   }

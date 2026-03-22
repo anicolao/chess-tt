@@ -18,6 +18,7 @@
   export let message = 'White to move';
   export let status = 'active';
   export let winner = null;
+  export let resultToken = '*';
   export let capturedWhite = [];
   export let capturedBlack = [];
   export let canUndo = false;
@@ -25,14 +26,18 @@
   export let canExport = false;
   export let boardThemeSettings = null;
   export let timeSettings = null;
+  export let seriesHistory = [];
+  export let reviewGameNumber = null;
   export let onClose = () => {};
   export let onNewGame = () => {};
+  export let onNewSeries = () => {};
   export let onUndo = () => {};
   export let onResign = () => {};
   export let onApplyBoardTheme = () => {};
   export let onApplyTimeControls = () => {};
   export let onExportChessCom = () => {};
   export let onExportLichess = () => {};
+  export let onSelectHistoryGame = () => {};
 
   function cloneComparableTimeSettings(settings) {
     return {
@@ -82,6 +87,7 @@
   let bottomIncrement = safeTimeSettings.seats.bottom.incrementSeconds;
   $: topClockLabel = invokingSeat === 'top' ? 'Your Clock' : "Opponent's Clock";
   $: bottomClockLabel = invokingSeat === 'bottom' ? 'Your Clock' : "Opponent's Clock";
+  $: completedGames = seriesHistory ?? [];
 
   $: comparableSafeTimeSettings = cloneComparableTimeSettings(safeTimeSettings);
   $: currentBoardThemePresetId = safeBoardThemeSettings.presetId ?? fallbackBoardThemeSettings.presetId;
@@ -187,6 +193,9 @@
   </div>
 
   <p class="message">{message}</p>
+  {#if reviewGameNumber}
+    <p class="review-label">Reviewing game {reviewGameNumber}</p>
+  {/if}
 
   <section class="board-theme-section" aria-label="Board colours">
     <div>
@@ -283,6 +292,50 @@
     </div>
   </section>
 
+  <section class="series-history" aria-label="Series history">
+    <div class="series-header">
+      <div>
+        <p class="eyebrow">Series history</p>
+        <p class="time-help">Completed games stay available for review and export.</p>
+      </div>
+      <button type="button" class="secondary-button" on:click={onNewSeries}>New Series</button>
+    </div>
+
+    {#if completedGames.length === 0}
+      <p class="empty-history">No completed games yet.</p>
+    {:else}
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th scope="col">Game</th>
+            <th scope="col">White</th>
+            <th scope="col">Black</th>
+            <th scope="col">Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each completedGames as game}
+            <tr class:selected={game.gameNumber === reviewGameNumber}>
+              <td>
+                <button
+                  type="button"
+                  class="history-link"
+                  aria-label={`Review game ${game.gameNumber}: ${game.whiteName} versus ${game.blackName}, ${game.result}`}
+                  on:click={() => onSelectHistoryGame(game.gameNumber)}
+                >
+                  Game {game.gameNumber}
+                </button>
+              </td>
+              <td>{game.whiteName}</td>
+              <td>{game.blackName}</td>
+              <td class="history-result">{game.result}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    {/if}
+  </section>
+
   <dl class="summary">
     <div>
       <dt>State</dt>
@@ -291,6 +344,10 @@
     <div>
       <dt>Winner</dt>
       <dd>{winner ?? '—'}</dd>
+    </div>
+    <div>
+      <dt>Result</dt>
+      <dd>{resultToken === '*' ? 'In progress' : resultToken}</dd>
     </div>
   </dl>
 
@@ -503,9 +560,16 @@
     color: #e6edf4;
   }
 
+  .review-label,
+  .empty-history {
+    color: #8eb7d8;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
   .summary {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0.75rem;
     margin: 0;
   }
@@ -544,9 +608,24 @@
     background: rgba(255, 255, 255, 0.04);
   }
 
+  .series-history {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.9rem;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
   .time-controls-header {
     display: grid;
     gap: 0.6rem;
+  }
+
+  .series-header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 1rem;
   }
 
   .time-help {
@@ -628,11 +707,54 @@
 
   .secondary-button {
     min-height: 3rem;
+    padding: 0.75rem 1rem;
     border: none;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.08);
     color: #f5f7fa;
     font-weight: 700;
+  }
+
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 0.55rem 0.35rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: #e6edf4;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .history-table th {
+    color: #93aabb;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .history-link {
+    border: none;
+    padding: 0;
+    background: none;
+    color: #8ee1ff;
+    font: inherit;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .history-result {
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .selected td {
+    background: rgba(102, 214, 255, 0.08);
   }
 
   .export-button-grid {

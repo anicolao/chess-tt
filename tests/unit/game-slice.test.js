@@ -106,6 +106,27 @@ describe('game reducer', () => {
     expect(hydrated.events.map((event) => event.type)).toEqual(['game.started', 'move.played', 'game.resigned']);
   });
 
+  test('new series names players and randomizes the first white seat from the payload', () => {
+    const state = gameReducer(undefined, gameActions.newSeriesRequested({
+      players: {
+        top: 'Alice',
+        bottom: 'Bob'
+      },
+      startingWhiteSeat: 'top',
+      now: 0
+    }));
+
+    expect(state.seriesPlayers).toEqual({
+      top: 'Alice',
+      bottom: 'Bob'
+    });
+    expect(state.seriesHistory).toEqual([]);
+    expect(state.timerSettings.seatColors).toEqual({
+      top: 'w',
+      bottom: 'b'
+    });
+  });
+
   test('detects checkmate from event replay', () => {
     const state = rebuildGameState([
       { type: 'game.started' },
@@ -118,6 +139,76 @@ describe('game reducer', () => {
     expect(state.status).toBe('checkmate');
     expect(state.winner).toBe('black');
     expect(state.message).toBe('Black wins by checkmate');
+  });
+
+  test('archives completed series games with result tokens and alternates colours for the next game', () => {
+    let state = gameReducer(undefined, gameActions.newSeriesRequested({
+      players: {
+        top: 'Alice',
+        bottom: 'Bob'
+      },
+      startingWhiteSeat: 'top',
+      now: 0
+    }));
+
+    state = gameReducer(state, gameActions.squarePressed('f2'));
+    state = gameReducer(state, gameActions.squarePressed('f3'));
+    state = gameReducer(state, gameActions.squarePressed('e7'));
+    state = gameReducer(state, gameActions.squarePressed('e5'));
+    state = gameReducer(state, gameActions.squarePressed('g2'));
+    state = gameReducer(state, gameActions.squarePressed('g4'));
+    state = gameReducer(state, gameActions.squarePressed('d8'));
+    state = gameReducer(state, gameActions.squarePressed('h4'));
+
+    expect(state.status).toBe('checkmate');
+    expect(state.seriesHistory).toHaveLength(1);
+    expect(state.reviewGameNumber).toBe(1);
+    expect(state.seriesHistory[0]).toMatchObject({
+      gameNumber: 1,
+      whiteName: 'Alice',
+      blackName: 'Bob',
+      result: '0-1'
+    });
+
+    state = gameReducer(state, gameActions.newGameRequested({ now: 0 }));
+
+    expect(state.seriesHistory).toHaveLength(1);
+    expect(state.reviewGameNumber).toBeNull();
+    expect(state.timerSettings.seatColors).toEqual({
+      top: 'b',
+      bottom: 'w'
+    });
+  });
+
+  test('selecting a game from history restores it for review and export', () => {
+    let state = gameReducer(undefined, gameActions.newSeriesRequested({
+      players: {
+        top: 'Alice',
+        bottom: 'Bob'
+      },
+      startingWhiteSeat: 'bottom',
+      now: 0
+    }));
+
+    state = gameReducer(state, gameActions.squarePressed('f2'));
+    state = gameReducer(state, gameActions.squarePressed('f3'));
+    state = gameReducer(state, gameActions.squarePressed('e7'));
+    state = gameReducer(state, gameActions.squarePressed('e5'));
+    state = gameReducer(state, gameActions.squarePressed('g2'));
+    state = gameReducer(state, gameActions.squarePressed('g4'));
+    state = gameReducer(state, gameActions.squarePressed('d8'));
+    state = gameReducer(state, gameActions.squarePressed('h4'));
+    state = gameReducer(state, gameActions.newGameRequested({ now: 0 }));
+    state = gameReducer(state, gameActions.historyGameSelected({ gameNumber: 1 }));
+
+    expect(state.reviewGameNumber).toBe(1);
+    expect(state.status).toBe('checkmate');
+    expect(state.winner).toBe('black');
+    expect(state.timerSettings.seatColors).toEqual({
+      top: 'b',
+      bottom: 'w'
+    });
+    expect(state.currentFen).toContain('6Pq');
   });
 
   test('applies custom seat time controls independently', () => {
