@@ -70,13 +70,13 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
           await expect(page.locator('.board-shell')).toHaveAttribute('style', /#f2ecd8/i);
           await expect(page.locator('.board-shell')).toHaveAttribute('style', /#557a46/i);
           await expect.poll(async () => page.evaluate(() => {
-            const darkSquare = getComputedStyle(document.querySelector('[data-square="a8"]') as Element).backgroundColor;
-            const lightSquare = getComputedStyle(document.querySelector('[data-square="b8"]') as Element).backgroundColor;
+            const lightSquare = getComputedStyle(document.querySelector('[data-square="a8"]') as Element).backgroundColor;
+            const darkSquare = getComputedStyle(document.querySelector('[data-square="b8"]') as Element).backgroundColor;
 
-            return { darkSquare, lightSquare };
+            return { lightSquare, darkSquare };
           })).toEqual({
-            darkSquare: 'rgb(85, 122, 70)',
-            lightSquare: 'rgb(242, 236, 216)'
+            lightSquare: 'rgb(242, 236, 216)',
+            darkSquare: 'rgb(85, 122, 70)'
           });
         }
       }
@@ -121,13 +121,13 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
           await expect(page.locator('.board-shell')).toHaveAttribute('style', /#334455/i);
           await expect(page.locator('.board-shell')).toHaveAttribute('style', /#112233/i);
           await expect.poll(async () => page.evaluate(() => {
-            const darkSquare = getComputedStyle(document.querySelector('[data-square="a8"]') as Element).backgroundColor;
-            const lightSquare = getComputedStyle(document.querySelector('[data-square="b8"]') as Element).backgroundColor;
+            const lightSquare = getComputedStyle(document.querySelector('[data-square="a8"]') as Element).backgroundColor;
+            const darkSquare = getComputedStyle(document.querySelector('[data-square="b8"]') as Element).backgroundColor;
 
-            return { darkSquare, lightSquare };
+            return { lightSquare, darkSquare };
           })).toEqual({
-            darkSquare: 'rgb(17, 34, 51)',
-            lightSquare: 'rgb(51, 68, 85)'
+            lightSquare: 'rgb(51, 68, 85)',
+            darkSquare: 'rgb(17, 34, 51)'
           });
         }
       }
@@ -178,13 +178,13 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
           await expect(page.locator('.board-shell')).toHaveAttribute('style', /#334455/i);
           await expect(page.locator('.board-shell')).toHaveAttribute('style', /#112233/i);
           await expect.poll(async () => page.evaluate(() => {
-            const darkSquare = getComputedStyle(document.querySelector('[data-square="a8"]') as Element).backgroundColor;
-            const lightSquare = getComputedStyle(document.querySelector('[data-square="b8"]') as Element).backgroundColor;
+            const lightSquare = getComputedStyle(document.querySelector('[data-square="a8"]') as Element).backgroundColor;
+            const darkSquare = getComputedStyle(document.querySelector('[data-square="b8"]') as Element).backgroundColor;
 
-            return { darkSquare, lightSquare };
+            return { lightSquare, darkSquare };
           })).toEqual({
-            darkSquare: 'rgb(17, 34, 51)',
-            lightSquare: 'rgb(51, 68, 85)'
+            lightSquare: 'rgb(51, 68, 85)',
+            darkSquare: 'rgb(17, 34, 51)'
           });
         }
       }

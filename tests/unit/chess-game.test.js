@@ -3,6 +3,15 @@ import { getBoardRows, getCheckedKingSquare } from '../../src/lib/game/chess-gam
 import { rebuildGameState } from '../../src/lib/redux/game-slice.js';
 
 describe('chess board row derivation', () => {
+  test('maps standard chessboard coordinates to the correct square colours', () => {
+    const boardSquares = getBoardRows().flat();
+
+    expect(boardSquares.find((square) => square.square === 'a1')).toMatchObject({ isLight: false });
+    expect(boardSquares.find((square) => square.square === 'h1')).toMatchObject({ isLight: true });
+    expect(boardSquares.find((square) => square.square === 'a8')).toMatchObject({ isLight: true });
+    expect(boardSquares.find((square) => square.square === 'h8')).toMatchObject({ isLight: false });
+  });
+
   test('marks the checked king square after a checking move', () => {
     const state = rebuildGameState([
       { type: 'game.started' },
