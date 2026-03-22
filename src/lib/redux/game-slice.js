@@ -630,9 +630,9 @@ const gameSlice = createSlice({
 
       const nextEvents = [{ type: 'game.started' }, ...events.slice(0, -1)];
       const nextState = rebuildGameState(nextEvents, {
-        timerSettings: timedState.timerSettings,
-        timerState: timedState.timerState,
-        boardThemeSettings: timedState.boardThemeSettings,
+        timerSettings: state.timerSettings,
+        timerState: state.timerState,
+        boardThemeSettings: state.boardThemeSettings,
         now
       });
       const clockArmed = nextState.history.length > 0;
