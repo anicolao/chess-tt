@@ -26,7 +26,11 @@ function loadPersistedGameState() {
       game: rebuildGameState(parsed.events, {
         boardThemeSettings: parsed.boardThemeSettings,
         timerSettings: parsed.timerSettings,
-        timerState: parsed.timerState
+        timerState: parsed.timerState,
+        seriesPlayers: parsed.seriesPlayers,
+        seriesHistory: parsed.seriesHistory,
+        seriesStartingWhiteSeat: parsed.seriesStartingWhiteSeat,
+        reviewGameNumber: parsed.reviewGameNumber
       })
     };
   } catch {
@@ -53,7 +57,11 @@ function persistGameState(gameState) {
           })),
           boardThemeSettings: gameState.boardThemeSettings,
           timerSettings: gameState.timerSettings,
-          timerState: gameState.timerState
+          timerState: gameState.timerState,
+          seriesPlayers: gameState.seriesPlayers,
+          seriesHistory: gameState.seriesHistory,
+          seriesStartingWhiteSeat: gameState.seriesStartingWhiteSeat,
+          reviewGameNumber: gameState.reviewGameNumber
         })
       );
   } catch {

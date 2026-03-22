@@ -4,8 +4,9 @@
   import Board from '$lib/components/Board.svelte';
   import ExportQrDialog from '$lib/components/ExportQrDialog.svelte';
   import GameInfo from '$lib/components/GameInfo.svelte';
+  import SeriesSetupDialog from '$lib/components/SeriesSetupDialog.svelte';
   import SettingsDialog from '$lib/components/SettingsDialog.svelte';
-  import { buildExportUrl, getExportPlatform } from '$lib/game/game-export';
+  import { buildExportUrl, getExportPlatform, getResultToken } from '$lib/game/game-export';
   import { getBoardRows, getCheckedKingSquare } from '$lib/game/chess-game';
   import { appStore, gameActions, gameState } from '$lib/redux/store';
 
@@ -20,6 +21,7 @@
   let isHydrated = false;
   let activeSettingsCorner = null;
   let activeExport = null;
+  let isSeriesSetupOpen = false;
   let clockIntervalId = null;
   let audioContext = null;
   let lastPlayedMoveCount = 0;
@@ -119,6 +121,7 @@
   $: canUndo = state.events.length > 1;
   $: canResign = state.status === 'active';
   $: canExport = state.history.length > 0;
+  $: resultToken = getResultToken(state);
   $: topSeatColor = state.timerSettings.seatColors.top;
   $: bottomSeatColor = state.timerSettings.seatColors.bottom;
   $: activeSeat = state.timerState.activeSeat;
@@ -165,10 +168,33 @@
     activeExport = null;
   }
 
+  function openSeriesSetup() {
+    closeSettings();
+    isSeriesSetupOpen = true;
+  }
+
+  function closeSeriesSetup() {
+    isSeriesSetupOpen = false;
+  }
+
+  function startSeries(players) {
+    isSeriesSetupOpen = false;
+    dispatch(gameActions.newSeriesRequested({
+      now: Date.now(),
+      players,
+      startingWhiteSeat: Math.random() < 0.5 ? 'top' : 'bottom'
+    }));
+  }
+
   function handleKeydown(event) {
     if (event.key === 'Escape') {
       if (activeExport) {
         closeExport();
+        return;
+      }
+
+      if (isSeriesSetupOpen) {
+        closeSeriesSetup();
         return;
       }
 
@@ -246,21 +272,26 @@
             message={state.message}
             status={state.status}
             winner={state.winner}
+            {resultToken}
             capturedWhite={state.captured.white}
             capturedBlack={state.captured.black}
             {canExport}
             boardThemeSettings={state.boardThemeSettings}
             timeSettings={state.timerSettings}
+            seriesHistory={state.seriesHistory}
+            reviewGameNumber={state.reviewGameNumber}
             {canUndo}
             {canResign}
             onClose={closeSettings}
             onNewGame={() => dispatchAndClose(gameActions.newGameRequested({ now: Date.now() }))}
+            onNewSeries={openSeriesSetup}
             onUndo={() => dispatchAndClose(gameActions.undoRequested({ now: Date.now() }))}
             onResign={() => dispatchAndClose(gameActions.resignRequested({ now: Date.now() }))}
             onApplyBoardTheme={dispatchBoardThemeSettings}
             onApplyTimeControls={dispatchClockSettings}
             onExportChessCom={() => openExport('chess-com')}
             onExportLichess={() => openExport('lichess')}
+            onSelectHistoryGame={(gameNumber) => dispatch(gameActions.historyGameSelected({ gameNumber }))}
           />
         {/if}
       </div>
@@ -286,6 +317,14 @@
       platformLabel={activeExport.platformLabel}
       url={activeExport.url}
       onClose={closeExport}
+    />
+  {/if}
+
+  {#if isSeriesSetupOpen}
+    <SeriesSetupDialog
+      players={state.seriesPlayers}
+      onClose={closeSeriesSetup}
+      onStartSeries={startSeries}
     />
   {/if}
 </div>
