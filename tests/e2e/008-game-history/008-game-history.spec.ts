@@ -107,6 +107,19 @@ test('New Series resets completed history and collects default player names', as
           await expect(page.getByRole('button', { name: 'Export to Chess.com' })).toBeDisabled();
           await expect(page.getByRole('button', { name: 'Export to Lichess' })).toBeDisabled();
         }
+      },
+      {
+        spec: 'The new series stores the updated Carol and Dana player names for later games',
+        check: async () => {
+          await expect.poll(async () => page.evaluate((key) => {
+            const raw = window.localStorage.getItem(key);
+            const parsed = raw ? JSON.parse(raw) : null;
+            return parsed?.seriesPlayers ?? null;
+          }, STORAGE_KEY)).toEqual({
+            top: 'Carol',
+            bottom: 'Dana'
+          });
+        }
       }
     ]
   });

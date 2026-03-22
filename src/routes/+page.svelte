@@ -177,12 +177,16 @@
     isSeriesSetupOpen = false;
   }
 
+  function createRandomStartingWhiteSeat() {
+    return Math.random() < 0.5 ? 'top' : 'bottom';
+  }
+
   function startSeries(players) {
     isSeriesSetupOpen = false;
     dispatch(gameActions.newSeriesRequested({
       now: Date.now(),
       players,
-      startingWhiteSeat: Math.random() < 0.5 ? 'top' : 'bottom'
+      startingWhiteSeat: createRandomStartingWhiteSeat()
     }));
   }
 
