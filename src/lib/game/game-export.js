@@ -11,6 +11,10 @@ export const EXPORT_PLATFORMS = [
   }
 ];
 
+function normalizePgnWhitespace(text = '') {
+  return `${text}`.replace(/\s+/g, ' ').trim();
+}
+
 function getResultToken({ status, winner } = {}) {
   if (winner === 'white') {
     return '1-0';
@@ -34,16 +38,16 @@ export function buildMoveText(history = [], resultToken = '*') {
     const whiteMove = history[moveIndex];
     const blackMove = history[moveIndex + 1];
 
-    moveText.push(`${Math.floor(moveIndex / 2) + 1}. ${whiteMove.san}`);
+    moveText.push(`${Math.floor(moveIndex / 2) + 1}. ${normalizePgnWhitespace(whiteMove?.san)}`);
 
     if (blackMove) {
-      moveText.push(blackMove.san);
+      moveText.push(normalizePgnWhitespace(blackMove.san));
     }
   }
 
   moveText.push(resultToken);
 
-  return moveText.join(' ').trim();
+  return normalizePgnWhitespace(moveText.join(' '));
 }
 
 export function exportGameToPgn(gameState = {}) {
