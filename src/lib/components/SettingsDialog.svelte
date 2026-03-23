@@ -456,17 +456,23 @@
 
   .board-theme-section {
     display: grid;
+    gap: 0.6rem;
+    align-content: start;
+    align-self: start;
   }
 
   .board-theme-row {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.55rem;
+    align-items: start;
   }
 
   .board-theme-button {
     display: grid;
     gap: 0.25rem;
+    align-content: start;
+    align-self: start;
     justify-items: center;
     padding: 0.35rem 0.25rem;
     border: none;

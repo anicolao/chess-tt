@@ -8,6 +8,7 @@ Verify that seat-based presets and custom time controls can be configured from s
 
 ### Verifications
 - [x] The board colour presets sit below the dialog heading and stay visually separated from the time controls
+- [x] The board colour preset tiles keep compact square previews instead of stretching tall
 - [x] Selecting the green preset updates the live board square colours immediately
 
 ## Custom seat times are applied independently
