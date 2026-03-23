@@ -157,11 +157,13 @@
       return;
     }
 
+    const currentSeat = activeSettingsSeat;
     closeSettings();
     activeExport = {
       platformId: platform.id,
       platformLabel: platform.label,
-      url: buildExportUrl(state, platform.id)
+      url: buildExportUrl(state, platform.id),
+      seat: currentSeat
     };
   }
 
@@ -332,6 +334,7 @@
       platformId={activeExport.platformId}
       platformLabel={activeExport.platformLabel}
       url={activeExport.url}
+      invokingSeat={activeExport.seat}
       onClose={closeExport}
     />
   {/if}

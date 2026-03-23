@@ -4,6 +4,7 @@
   export let platformId = 'chess-com';
   export let platformLabel = 'Chess.com';
   export let url = '';
+  export let invokingSeat = 'bottom';
   export let onClose = () => {};
 
   let isLoading = false;
@@ -56,7 +57,7 @@
   }
 </script>
 
-<div class="export-overlay">
+<div class:rotated-view={invokingSeat === 'top'} class="export-overlay">
   <div
     class="export-dialog"
     role="dialog"
@@ -109,6 +110,10 @@
     padding: 1rem;
     background: rgba(7, 11, 16, 0.78);
     backdrop-filter: blur(10px);
+  }
+
+  .rotated-view {
+    transform: rotate(180deg);
   }
 
   .export-dialog {

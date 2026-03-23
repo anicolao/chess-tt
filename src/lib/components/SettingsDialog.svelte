@@ -325,28 +325,26 @@
         <thead>
           <tr>
             <th scope="col">Game</th>
-            <th scope="col">You</th>
-            <th scope="col">Opponent</th>
+            <th scope="col">White</th>
+            <th scope="col">Black</th>
             <th scope="col">Result</th>
           </tr>
         </thead>
         <tbody>
           {#each completedGames as game}
-            {@const yourPlayerName = game.whiteSeat === yourSeat ? game.whiteName : game.blackName}
-            {@const opponentPlayerName = game.whiteSeat === opponentSeat ? game.whiteName : game.blackName}
             <tr class:selected={game.gameNumber === reviewGameNumber}>
               <td>
                 <button
                   type="button"
                   class="history-link"
-                  aria-label={`Review game ${game.gameNumber}: ${yourPlayerName} versus ${opponentPlayerName}, ${game.result}`}
+                  aria-label={`Review game ${game.gameNumber}: ${game.whiteName} versus ${game.blackName}, ${game.result}`}
                   on:click={() => onSelectHistoryGame(game.gameNumber)}
                 >
                   Game {game.gameNumber}
                 </button>
               </td>
-              <td>{yourPlayerName}</td>
-              <td>{opponentPlayerName}</td>
+              <td>{game.whiteName}</td>
+              <td>{game.blackName}</td>
               <td class="history-result">{game.result}</td>
             </tr>
           {/each}

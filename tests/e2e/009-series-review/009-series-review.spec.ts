@@ -78,8 +78,8 @@ test('Completed series games stay reviewable and exportable from settings', asyn
       {
         spec: 'The prior games table records you versus your opponent with the 0-1 result token',
         check: async () => {
-          await expect(page.locator('.history-table')).toContainText('You');
-          await expect(page.locator('.history-table')).toContainText('Opponent');
+          await expect(page.locator('.history-table')).toContainText('White');
+          await expect(page.locator('.history-table')).toContainText('Black');
           await expect(page.locator('.history-table')).toContainText('Bob');
           await expect(page.locator('.history-table')).toContainText('Alice');
           await expect(page.locator('.history-table')).toContainText('0-1');
