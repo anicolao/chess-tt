@@ -68,6 +68,28 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
         }
       },
       {
+        spec: 'The board colour preset tiles keep compact square previews instead of stretching tall',
+        check: async () => {
+          await expect.poll(async () => page.evaluate(() => {
+            return [...document.querySelectorAll('.board-theme-button')].map((button) => {
+              const preview = button.querySelector('.board-theme-preview');
+              const buttonBox = button.getBoundingClientRect();
+              const previewBox = preview?.getBoundingClientRect();
+
+              return {
+                buttonAspectRatio: Number((buttonBox.width / buttonBox.height).toFixed(2)),
+                previewIsSquare: previewBox ? Math.abs(previewBox.width - previewBox.height) <= 1 : false
+              };
+            });
+          })).toEqual([
+            { buttonAspectRatio: 1.24, previewIsSquare: true },
+            { buttonAspectRatio: 1.24, previewIsSquare: true },
+            { buttonAspectRatio: 1.24, previewIsSquare: true },
+            { buttonAspectRatio: 1.24, previewIsSquare: true }
+          ]);
+        }
+      },
+      {
         spec: 'Selecting the green preset updates the live board square colours immediately',
         check: async () => {
           await expect(page.locator('.board-shell')).toHaveAttribute('style', /#f2ecd8/i);
