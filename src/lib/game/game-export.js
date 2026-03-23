@@ -11,15 +11,11 @@ export const EXPORT_PLATFORMS = [
   }
 ];
 
-<<<<<<< copilot/fix-chess-com-export-newlines
 function normalizePgnWhitespace(text = '') {
   return `${text}`.replace(/\s+/g, ' ').trim();
 }
 
-function getResultToken({ status, winner } = {}) {
-=======
 export function getResultToken({ status, winner } = {}) {
->>>>>>> main
   if (winner === 'white') {
     return '1-0';
   }
