@@ -427,24 +427,24 @@
     transform: rotate(180deg);
   }
 
-    .settings-trigger.top-left,
-    .settings-trigger.top-right {
-    top: 0;
+  .settings-trigger.top-left,
+  .settings-trigger.top-right {
+    top: 1.4rem;
   }
 
   .settings-trigger.bottom-left,
   .settings-trigger.bottom-right {
-    bottom: 0;
+    bottom: 1.4rem;
   }
 
   .settings-trigger.top-left,
   .settings-trigger.bottom-left {
-    left: 0;
+    left: 1.4rem;
   }
 
   .settings-trigger.top-right,
   .settings-trigger.bottom-right {
-    right: 0;
+    right: 1.4rem;
   }
 
   .clock-slot-black {
