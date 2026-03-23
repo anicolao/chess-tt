@@ -4,14 +4,15 @@
   import Board from '$lib/components/Board.svelte';
   import ExportQrDialog from '$lib/components/ExportQrDialog.svelte';
   import GameInfo from '$lib/components/GameInfo.svelte';
+  import SeriesSetupDialog from '$lib/components/SeriesSetupDialog.svelte';
   import SettingsDialog from '$lib/components/SettingsDialog.svelte';
-  import { buildExportUrl, getExportPlatform } from '$lib/game/game-export';
+  import { buildExportUrl, getExportPlatform, getResultToken } from '$lib/game/game-export';
   import { getBoardRows, getCheckedKingSquare } from '$lib/game/chess-game';
   import { appStore, gameActions, gameState } from '$lib/redux/store';
 
-  const playerSettingsAnchors = [
-    { seat: 'top', corner: 'top-left' },
-    { seat: 'bottom', corner: 'bottom-right' }
+  const playerControls = [
+    { seat: 'top', settingsCorner: 'top-left', closeCorner: 'top-right' },
+    { seat: 'bottom', settingsCorner: 'bottom-right', closeCorner: 'bottom-left' }
   ];
   const MOVE_SOUND_ATTACK_SECONDS = 0.008;
   const MOVE_SOUND_DECAY_SECONDS = 0.04;
@@ -20,6 +21,8 @@
   let isHydrated = false;
   let activeSettingsCorner = null;
   let activeExport = null;
+  let isSeriesSetupOpen = false;
+  let seriesSetupSeat = 'bottom';
   let clockIntervalId = null;
   let audioContext = null;
   let lastPlayedMoveCount = 0;
@@ -119,10 +122,11 @@
   $: canUndo = state.events.length > 1;
   $: canResign = state.status === 'active';
   $: canExport = state.history.length > 0;
+  $: resultToken = getResultToken(state);
   $: topSeatColor = state.timerSettings.seatColors.top;
   $: bottomSeatColor = state.timerSettings.seatColors.bottom;
   $: activeSeat = state.timerState.activeSeat;
-  $: activeSettingsSeat = playerSettingsAnchors.find(({ corner }) => corner === activeSettingsCorner)?.seat ?? 'bottom';
+  $: activeSettingsSeat = playerControls.find(({ settingsCorner }) => settingsCorner === activeSettingsCorner)?.seat ?? 'bottom';
   $: {
     if (isHydrated) {
       // Only announce newly added moves; rewinds like undo reduce history length without replaying sounds.
@@ -153,11 +157,13 @@
       return;
     }
 
+    const currentSeat = activeSettingsSeat;
     closeSettings();
     activeExport = {
       platformId: platform.id,
       platformLabel: platform.label,
-      url: buildExportUrl(state, platform.id)
+      url: buildExportUrl(state, platform.id),
+      seat: currentSeat
     };
   }
 
@@ -165,10 +171,46 @@
     activeExport = null;
   }
 
+  function openSeriesSetup() {
+    seriesSetupSeat = activeSettingsSeat;
+    closeSettings();
+    isSeriesSetupOpen = true;
+  }
+
+  function closeSeriesSetup() {
+    isSeriesSetupOpen = false;
+  }
+
+  function getSeriesRandomValue() {
+    if (typeof window !== 'undefined' && typeof window.__seriesWhiteSeatRandomValue === 'number') {
+      return window.__seriesWhiteSeatRandomValue;
+    }
+
+    return Math.random();
+  }
+
+  function createRandomStartingWhiteSeat() {
+    return getSeriesRandomValue() < 0.5 ? 'top' : 'bottom';
+  }
+
+  function startSeries(players) {
+    isSeriesSetupOpen = false;
+    dispatch(gameActions.newSeriesRequested({
+      now: Date.now(),
+      players,
+      startingWhiteSeat: createRandomStartingWhiteSeat()
+    }));
+  }
+
   function handleKeydown(event) {
     if (event.key === 'Escape') {
       if (activeExport) {
         closeExport();
+        return;
+      }
+
+      if (isSeriesSetupOpen) {
+        closeSeriesSetup();
         return;
       }
 
@@ -221,21 +263,31 @@
 
     <main class="play-area">
       <div class="board-frame">
-        {#each playerSettingsAnchors as control}
+        {#each playerControls as control}
           <button
             type="button"
-            class:top-trigger={control.corner.startsWith('top')}
-            class={`settings-trigger ${control.corner}`}
+            class:top-trigger={control.settingsCorner.startsWith('top')}
+            class={`settings-trigger ${control.settingsCorner}`}
             aria-label={settingsLabel(control.seat)}
-            on:click={() => toggleSettings(control.corner)}
+            on:click={() => toggleSettings(control.settingsCorner)}
           >
             ⚙
+          </button>
+          <button
+            type="button"
+            class:top-trigger={control.closeCorner.startsWith('top')}
+            class={`settings-trigger ${control.closeCorner}`}
+            aria-label={`Exit game for ${control.seat} seat`}
+            on:click={() => window.close()}
+          >
+            ✕
           </button>
         {/each}
 
         <Board
           rows={boardRows}
           palette={state.boardThemeSettings.palette}
+          isFlipped={bottomSeatColor === 'b'}
           onPress={(square) => dispatch(gameActions.squarePressed({ square, now: Date.now() }))}
         />
 
@@ -246,21 +298,27 @@
             message={state.message}
             status={state.status}
             winner={state.winner}
+            {resultToken}
             capturedWhite={state.captured.white}
             capturedBlack={state.captured.black}
             {canExport}
             boardThemeSettings={state.boardThemeSettings}
             timeSettings={state.timerSettings}
+            seriesPlayers={state.seriesPlayers}
+            seriesHistory={state.seriesHistory}
+            reviewGameNumber={state.reviewGameNumber}
             {canUndo}
             {canResign}
             onClose={closeSettings}
             onNewGame={() => dispatchAndClose(gameActions.newGameRequested({ now: Date.now() }))}
+            onNewSeries={openSeriesSetup}
             onUndo={() => dispatchAndClose(gameActions.undoRequested({ now: Date.now() }))}
             onResign={() => dispatchAndClose(gameActions.resignRequested({ now: Date.now() }))}
             onApplyBoardTheme={dispatchBoardThemeSettings}
             onApplyTimeControls={dispatchClockSettings}
             onExportChessCom={() => openExport('chess-com')}
             onExportLichess={() => openExport('lichess')}
+            onSelectHistoryGame={(gameNumber) => dispatch(gameActions.historyGameSelected({ gameNumber }))}
           />
         {/if}
       </div>
@@ -285,7 +343,17 @@
       platformId={activeExport.platformId}
       platformLabel={activeExport.platformLabel}
       url={activeExport.url}
+      invokingSeat={activeExport.seat}
       onClose={closeExport}
+    />
+  {/if}
+
+  {#if isSeriesSetupOpen}
+    <SeriesSetupDialog
+      players={state.seriesPlayers}
+      invokingSeat={seriesSetupSeat}
+      onClose={closeSeriesSetup}
+      onStartSeries={startSeries}
     />
   {/if}
 </div>

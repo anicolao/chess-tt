@@ -18,6 +18,7 @@
   export let message = 'White to move';
   export let status = 'active';
   export let winner = null;
+  export let resultToken = '*';
   export let capturedWhite = [];
   export let capturedBlack = [];
   export let canUndo = false;
@@ -25,14 +26,22 @@
   export let canExport = false;
   export let boardThemeSettings = null;
   export let timeSettings = null;
+  export let seriesPlayers = {
+    top: 'Player 1',
+    bottom: 'Player 2'
+  };
+  export let seriesHistory = [];
+  export let reviewGameNumber = null;
   export let onClose = () => {};
   export let onNewGame = () => {};
+  export let onNewSeries = () => {};
   export let onUndo = () => {};
   export let onResign = () => {};
   export let onApplyBoardTheme = () => {};
   export let onApplyTimeControls = () => {};
   export let onExportChessCom = () => {};
   export let onExportLichess = () => {};
+  export let onSelectHistoryGame = () => {};
 
   function cloneComparableTimeSettings(settings) {
     return {
@@ -82,6 +91,13 @@
   let bottomIncrement = safeTimeSettings.seats.bottom.incrementSeconds;
   $: topClockLabel = invokingSeat === 'top' ? 'Your Clock' : "Opponent's Clock";
   $: bottomClockLabel = invokingSeat === 'bottom' ? 'Your Clock' : "Opponent's Clock";
+  $: completedGames = seriesHistory ?? [];
+  $: yourSeat = invokingSeat === 'top' ? 'top' : 'bottom';
+  $: opponentSeat = invokingSeat === 'top' ? 'bottom' : 'top';
+  $: yourName = seriesPlayers?.[yourSeat] ?? 'Player 1';
+  $: opponentName = seriesPlayers?.[opponentSeat] ?? 'Player 2';
+  $: yourColorName = getColorName(safeTimeSettings.seatColors[yourSeat]);
+  $: opponentColorName = getColorName(safeTimeSettings.seatColors[opponentSeat]);
 
   $: comparableSafeTimeSettings = cloneComparableTimeSettings(safeTimeSettings);
   $: currentBoardThemePresetId = safeBoardThemeSettings.presetId ?? fallbackBoardThemeSettings.presetId;
@@ -187,11 +203,14 @@
   </div>
 
   <p class="message">{message}</p>
+  {#if reviewGameNumber}
+    <p class="review-label">Reviewing game {reviewGameNumber}</p>
+  {/if}
 
   <section class="board-theme-section" aria-label="Board colours">
     <div>
       <p class="eyebrow">Board colours</p>
-      <p class="time-help">Choose the square colours before adjusting the seat clocks.</p>
+      <p class="time-help">Pick board colours before adjusting the clocks.</p>
     </div>
     <div class="board-theme-row">
       {#each BOARD_THEME_PRESETS as preset}
@@ -228,7 +247,7 @@
     <div class="time-controls-header">
       <div>
         <p class="eyebrow">Time controls</p>
-        <p class="time-help">Clocks stay with the table side, not the piece color.</p>
+        <p class="time-help">Clocks stay with the table side.</p>
       </div>
       <label class="preset-picker">
         <span>Time control preset</span>
@@ -275,12 +294,63 @@
   <section class="export-controls" aria-label="Export game">
     <div>
       <p class="eyebrow">Export game</p>
-      <p class="time-help">Generate a QR code that opens the current game on your phone.</p>
+      <p class="time-help">Open the current game on your phone.</p>
     </div>
     <div class="export-button-grid">
       <button type="button" disabled={!canExport} on:click={onExportChessCom}>Export to Chess.com</button>
       <button type="button" disabled={!canExport} on:click={onExportLichess}>Export to Lichess</button>
     </div>
+  </section>
+
+  <section class="series-history" aria-label="Series history">
+    <div class="series-header">
+      <div>
+        <p class="eyebrow">Series history</p>
+        <p class="time-help">You = the edge of the table where this dialog faces you.</p>
+        <p class="series-matchup">
+          <strong>You:</strong> {yourName}
+          <span aria-hidden="true"> · </span>
+          <strong>Opponent:</strong> {opponentName}
+          <span aria-hidden="true"> · </span>
+          This game: You have {yourColorName}; opponent has {opponentColorName}.
+        </p>
+      </div>
+      <button type="button" class="secondary-button" on:click={onNewSeries}>New Series</button>
+    </div>
+
+    {#if completedGames.length === 0}
+      <p class="empty-history">No completed games yet.</p>
+    {:else}
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th scope="col">Game</th>
+            <th scope="col">White</th>
+            <th scope="col">Black</th>
+            <th scope="col">Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          {#each completedGames as game}
+            <tr class:selected={game.gameNumber === reviewGameNumber}>
+              <td>
+                <button
+                  type="button"
+                  class="history-link"
+                  aria-label={`Review game ${game.gameNumber}: ${game.whiteName} versus ${game.blackName}, ${game.result}`}
+                  on:click={() => onSelectHistoryGame(game.gameNumber)}
+                >
+                  Game {game.gameNumber}
+                </button>
+              </td>
+              <td>{game.whiteName}</td>
+              <td>{game.blackName}</td>
+              <td class="history-result">{game.result}</td>
+            </tr>
+          {/each}
+        </tbody>
+      </table>
+    {/if}
   </section>
 
   <dl class="summary">
@@ -291,6 +361,10 @@
     <div>
       <dt>Winner</dt>
       <dd>{winner ?? '—'}</dd>
+    </div>
+    <div>
+      <dt>Result</dt>
+      <dd>{resultToken === '*' ? 'In progress' : resultToken}</dd>
     </div>
   </dl>
 
@@ -322,14 +396,16 @@
     </div>
   </div>
 
-  <Controls
-    stacked={true}
-    {canUndo}
-    {canResign}
-    {onNewGame}
-    {onUndo}
-    {onResign}
-  />
+  <div class="controls-panel">
+    <Controls
+      stacked={false}
+      {canUndo}
+      {canResign}
+      {onNewGame}
+      {onUndo}
+      {onResign}
+    />
+  </div>
 
   {#if showCustomBoardThemeDialog}
     <div class="dialog-scrim" aria-hidden="true"></div>
@@ -358,14 +434,14 @@
 
 <style>
   .settings-dialog {
-    --dialog-viewport-padding: 2rem;
+    --dialog-viewport-padding: 0.75rem;
     position: absolute;
     z-index: 3;
     display: grid;
-    gap: 1rem;
+    gap: 0.5rem;
     width: min(30rem, calc(100vw - var(--dialog-viewport-padding)));
     max-height: calc(100dvh - var(--dialog-viewport-padding));
-    padding: 1.1rem;
+    padding: 0.85rem;
     border-radius: 1.2rem;
     background: rgba(10, 16, 23, 0.96);
     box-shadow:
@@ -378,19 +454,25 @@
 
   .board-theme-section {
     display: grid;
+    gap: 0.6rem;
+    align-content: start;
+    align-self: start;
   }
 
   .board-theme-row {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0.55rem;
+    align-items: start;
   }
 
   .board-theme-button {
     display: grid;
-    gap: 0.35rem;
+    gap: 0.25rem;
+    align-content: start;
+    align-self: start;
     justify-items: center;
-    padding: 0.45rem 0.35rem 0.4rem;
+    padding: 0.35rem 0.25rem;
     border: none;
     border-radius: 0.95rem;
     background: rgba(255, 255, 255, 0.04);
@@ -407,7 +489,7 @@
   .board-theme-preview {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    width: 2.4rem;
+    width: 2rem;
     aspect-ratio: 1;
     overflow: hidden;
     border-radius: 0.55rem;
@@ -423,13 +505,13 @@
   .custom-preview {
     place-items: center;
     background: rgba(255, 255, 255, 0.08);
-    font-size: 1.35rem;
+    font-size: 1.1rem;
     font-weight: 700;
     line-height: 1;
   }
 
   .board-theme-label {
-    font-size: 0.66rem;
+    font-size: 0.6rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -437,12 +519,12 @@
 
   .top-left,
   .top-right {
-    top: 3rem;
+    top: 1rem;
   }
 
   .bottom-left,
   .bottom-right {
-    bottom: 3rem;
+    bottom: 1rem;
   }
 
   .top-left,
@@ -487,14 +569,14 @@
 
   .eyebrow {
     color: #93aabb;
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
   h2 {
-    font-size: 1.05rem;
+    font-size: 1rem;
   }
 
   .message,
@@ -503,10 +585,17 @@
     color: #e6edf4;
   }
 
+  .review-label,
+  .empty-history {
+    color: #8eb7d8;
+    font-size: 0.78rem;
+    font-weight: 600;
+  }
+
   .summary {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.6rem;
     margin: 0;
   }
 
@@ -525,21 +614,29 @@
 
   .captures {
     display: grid;
-    gap: 0.75rem;
+    gap: 0.45rem;
   }
 
   .time-controls {
     display: grid;
-    gap: 0.75rem;
-    padding: 0.9rem;
+    gap: 0.6rem;
+    padding: 0.5rem;
     border-radius: 1rem;
     background: rgba(255, 255, 255, 0.04);
   }
 
   .export-controls {
     display: grid;
-    gap: 0.75rem;
-    padding: 0.9rem;
+    gap: 0.6rem;
+    padding: 0.5rem;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .series-history {
+    display: grid;
+    gap: 0.6rem;
+    padding: 0.5rem;
     border-radius: 1rem;
     background: rgba(255, 255, 255, 0.04);
   }
@@ -549,9 +646,26 @@
     gap: 0.6rem;
   }
 
+  .series-header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .series-matchup {
+    color: #e6edf4;
+    font-size: 0.82rem;
+    line-height: 1.3;
+  }
+
+  .series-matchup strong {
+    color: #f5f7fa;
+  }
+
   .time-help {
     color: #d6e2eb;
-    font-size: 0.78rem;
+    font-size: 0.7rem;
     line-height: 1.35;
   }
 
@@ -574,10 +688,10 @@
 
   .preset-picker select,
   .seat-control input {
-    min-height: 2.6rem;
+    min-height: 2.35rem;
     border: none;
     border-radius: 0.85rem;
-    padding: 0.65rem 0.85rem;
+    padding: 0.5rem 0.75rem;
     background: rgba(255, 255, 255, 0.08);
     color: #f5f7fa;
   }
@@ -593,13 +707,13 @@
 
   .seat-control-grid {
     display: grid;
-    gap: 0.75rem;
+    gap: 0.65rem;
   }
 
   .seat-control {
     display: grid;
-    gap: 0.55rem;
-    padding: 0.75rem;
+    gap: 0.4rem;
+    padding: 0.5rem;
     border: 0;
     border-radius: 0.95rem;
     background: rgba(255, 255, 255, 0.04);
@@ -613,12 +727,12 @@
 
   .seat-color {
     color: #9ab0c0;
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     text-transform: capitalize;
   }
 
   .apply-button {
-    min-height: 3rem;
+    min-height: 2.35rem;
     border: none;
     border-radius: 999px;
     background: linear-gradient(135deg, rgba(149, 255, 206, 0.86), rgba(79, 188, 255, 0.78));
@@ -627,7 +741,8 @@
   }
 
   .secondary-button {
-    min-height: 3rem;
+    min-height: 2.35rem;
+    padding: 0.65rem 0.95rem;
     border: none;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.08);
@@ -635,13 +750,55 @@
     font-weight: 700;
   }
 
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 0.42rem 0.3rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: #e6edf4;
+    text-align: left;
+    vertical-align: middle;
+  }
+
+  .history-table th {
+    color: #93aabb;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .history-link {
+    border: none;
+    padding: 0;
+    background: none;
+    color: #8ee1ff;
+    font: inherit;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .history-result {
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .selected td {
+    background: rgba(102, 214, 255, 0.08);
+  }
+
   .export-button-grid {
     display: grid;
-    gap: 0.75rem;
+    gap: 0.6rem;
   }
 
   .export-button-grid button {
-    min-height: 3rem;
+    min-height: 2.35rem;
     border: none;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.08);
@@ -655,15 +812,19 @@
 
   .captured-row {
     display: flex;
-    min-height: 1.75rem;
+    min-height: 1.45rem;
     flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-top: 0.3rem;
-    font-size: 1.2rem;
+    gap: 0.25rem;
+    margin-top: 0.2rem;
+    font-size: 0.95rem;
   }
 
   .captured-piece {
     filter: drop-shadow(0 0.08rem 0.16rem rgba(0, 0, 0, 0.35));
+  }
+
+  .controls-panel {
+    display: grid;
   }
 
   .dialog-scrim {
@@ -697,12 +858,38 @@
 
   @media (max-width: 640px) {
     .settings-dialog {
-      --dialog-viewport-padding: 1.5rem;
+      --dialog-viewport-padding: 1rem;
       width: min(22rem, calc(100vw - var(--dialog-viewport-padding)));
     }
   }
 
   @media (min-width: 640px) {
+    .settings-dialog {
+      width: min(44rem, calc(100vw - var(--dialog-viewport-padding)));
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-areas:
+        "header  header"
+        "message message"
+        "review  review"
+        "theme   time"
+        "export  time"
+        "summary time"
+        "capture history"
+        "control history";
+      align-content: start;
+    }
+
+    .header { grid-area: header; }
+    .message { grid-area: message; }
+    .review-label { grid-area: review; }
+    .board-theme-section { grid-area: theme; }
+    .time-controls { grid-area: time; align-self: start; }
+    .export-controls { grid-area: export; }
+    .series-history { grid-area: history; align-self: start; }
+    .summary { grid-area: summary; }
+    .captures { grid-area: capture; }
+    .controls-panel { grid-area: control; }
+
     .custom-theme-grid,
     .custom-theme-actions,
     .time-controls-header,

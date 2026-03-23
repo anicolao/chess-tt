@@ -1,6 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { TestStepHelper } from '../helpers/test-step-helper';
 
+// Compact preset buttons are slightly wider than tall because they include a square swatch plus a short label.
+const MIN_PRESET_BUTTON_ASPECT_RATIO = 1.15;
+const MAX_PRESET_BUTTON_ASPECT_RATIO = 1.35;
+
 test('Tabletop time controls can be customized and run automatically', async ({ page }, testInfo) => {
   const tester = new TestStepHelper(page, testInfo);
   tester.setMetadata(
@@ -27,7 +31,7 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
     description: 'Board theme presets and custom colours can be selected from settings',
     verifications: [
       {
-        spec: 'The board colour presets sit below the dialog heading and above the time controls',
+        spec: 'The board colour presets sit below the dialog heading and stay visually separated from the time controls',
         check: async () => {
           await expect(page.getByRole('button', { name: 'Current board colours' })).toBeVisible();
           await expect(page.getByRole('button', { name: 'Green board colours' })).toBeVisible();
@@ -52,7 +56,10 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
                 boardTheme.compareDocumentPosition(timeControls) & window.Node.DOCUMENT_POSITION_FOLLOWING
               ),
               boardThemeBelowHeader: boardThemeBox.top >= headerBox.bottom,
-              boardThemeAboveTimeControls: boardThemeBox.bottom <= timeControlsBox.top
+              boardThemeSeparatedFromTimeControls: (
+                boardThemeBox.bottom <= timeControlsBox.top ||
+                boardThemeBox.right <= timeControlsBox.left
+              )
             };
           });
 
@@ -60,7 +67,40 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
             headerBeforeBoardTheme: true,
             boardThemeBeforeTimeControls: true,
             boardThemeBelowHeader: true,
-            boardThemeAboveTimeControls: true
+            boardThemeSeparatedFromTimeControls: true
+          });
+        }
+      },
+      {
+        spec: 'The board colour preset tiles keep compact square previews instead of stretching tall',
+        check: async () => {
+          await expect.poll(async () => {
+            const measurements = await page.evaluate(() => {
+              return [...document.querySelectorAll('.board-theme-button')].map((button) => {
+                const preview = button.querySelector('.board-theme-preview');
+                const buttonBox = button.getBoundingClientRect();
+                const previewBox = preview?.getBoundingClientRect();
+                const buttonAspectRatio = buttonBox.height === 0 ? 0 : buttonBox.width / buttonBox.height;
+
+                return {
+                  buttonAspectRatio,
+                  previewIsSquare: previewBox ? Math.abs(previewBox.width - previewBox.height) <= 1 : false
+                };
+              });
+            });
+
+            return {
+              presetCount: measurements.length,
+              allCompact: measurements.every(({ buttonAspectRatio }) => (
+                buttonAspectRatio >= MIN_PRESET_BUTTON_ASPECT_RATIO &&
+                buttonAspectRatio <= MAX_PRESET_BUTTON_ASPECT_RATIO
+              )),
+              allPreviewsSquare: measurements.every(({ previewIsSquare }) => previewIsSquare)
+            };
+          }).toEqual({
+            presetCount: 4,
+            allCompact: true,
+            allPreviewsSquare: true
           });
         }
       },
@@ -70,13 +110,13 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
           await expect(page.locator('.board-shell')).toHaveAttribute('style', /#f2ecd8/i);
           await expect(page.locator('.board-shell')).toHaveAttribute('style', /#557a46/i);
           await expect.poll(async () => page.evaluate(() => {
-            const darkSquare = getComputedStyle(document.querySelector('[data-square="a8"]') as Element).backgroundColor;
-            const lightSquare = getComputedStyle(document.querySelector('[data-square="b8"]') as Element).backgroundColor;
+            const lightSquare = getComputedStyle(document.querySelector('[data-square="a8"]') as Element).backgroundColor;
+            const darkSquare = getComputedStyle(document.querySelector('[data-square="b8"]') as Element).backgroundColor;
 
-            return { darkSquare, lightSquare };
+            return { lightSquare, darkSquare };
           })).toEqual({
-            darkSquare: 'rgb(85, 122, 70)',
-            lightSquare: 'rgb(242, 236, 216)'
+            lightSquare: 'rgb(242, 236, 216)',
+            darkSquare: 'rgb(85, 122, 70)'
           });
         }
       }
@@ -121,13 +161,13 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
           await expect(page.locator('.board-shell')).toHaveAttribute('style', /#334455/i);
           await expect(page.locator('.board-shell')).toHaveAttribute('style', /#112233/i);
           await expect.poll(async () => page.evaluate(() => {
-            const darkSquare = getComputedStyle(document.querySelector('[data-square="a8"]') as Element).backgroundColor;
-            const lightSquare = getComputedStyle(document.querySelector('[data-square="b8"]') as Element).backgroundColor;
+            const lightSquare = getComputedStyle(document.querySelector('[data-square="a8"]') as Element).backgroundColor;
+            const darkSquare = getComputedStyle(document.querySelector('[data-square="b8"]') as Element).backgroundColor;
 
-            return { darkSquare, lightSquare };
+            return { lightSquare, darkSquare };
           })).toEqual({
-            darkSquare: 'rgb(17, 34, 51)',
-            lightSquare: 'rgb(51, 68, 85)'
+            lightSquare: 'rgb(51, 68, 85)',
+            darkSquare: 'rgb(17, 34, 51)'
           });
         }
       }
@@ -178,13 +218,13 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
           await expect(page.locator('.board-shell')).toHaveAttribute('style', /#334455/i);
           await expect(page.locator('.board-shell')).toHaveAttribute('style', /#112233/i);
           await expect.poll(async () => page.evaluate(() => {
-            const darkSquare = getComputedStyle(document.querySelector('[data-square="a8"]') as Element).backgroundColor;
-            const lightSquare = getComputedStyle(document.querySelector('[data-square="b8"]') as Element).backgroundColor;
+            const lightSquare = getComputedStyle(document.querySelector('[data-square="a8"]') as Element).backgroundColor;
+            const darkSquare = getComputedStyle(document.querySelector('[data-square="b8"]') as Element).backgroundColor;
 
-            return { darkSquare, lightSquare };
+            return { lightSquare, darkSquare };
           })).toEqual({
-            darkSquare: 'rgb(17, 34, 51)',
-            lightSquare: 'rgb(51, 68, 85)'
+            lightSquare: 'rgb(51, 68, 85)',
+            darkSquare: 'rgb(17, 34, 51)'
           });
         }
       }
