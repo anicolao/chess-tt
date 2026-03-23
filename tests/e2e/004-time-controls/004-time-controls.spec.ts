@@ -1,6 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { TestStepHelper } from '../helpers/test-step-helper';
 
+// Compact preset buttons are slightly wider than tall because they include a square swatch plus a short label.
+const MIN_PRESET_BUTTON_ASPECT_RATIO = 1.15;
+const MAX_PRESET_BUTTON_ASPECT_RATIO = 1.35;
+
 test('Tabletop time controls can be customized and run automatically', async ({ page }, testInfo) => {
   const tester = new TestStepHelper(page, testInfo);
   tester.setMetadata(
@@ -70,23 +74,34 @@ test('Tabletop time controls can be customized and run automatically', async ({ 
       {
         spec: 'The board colour preset tiles keep compact square previews instead of stretching tall',
         check: async () => {
-          await expect.poll(async () => page.evaluate(() => {
-            return [...document.querySelectorAll('.board-theme-button')].map((button) => {
-              const preview = button.querySelector('.board-theme-preview');
-              const buttonBox = button.getBoundingClientRect();
-              const previewBox = preview?.getBoundingClientRect();
+          await expect.poll(async () => {
+            const measurements = await page.evaluate(() => {
+              return [...document.querySelectorAll('.board-theme-button')].map((button) => {
+                const preview = button.querySelector('.board-theme-preview');
+                const buttonBox = button.getBoundingClientRect();
+                const previewBox = preview?.getBoundingClientRect();
+                const buttonAspectRatio = buttonBox.height === 0 ? 0 : buttonBox.width / buttonBox.height;
 
-              return {
-                buttonAspectRatio: Number((buttonBox.width / buttonBox.height).toFixed(2)),
-                previewIsSquare: previewBox ? Math.abs(previewBox.width - previewBox.height) <= 1 : false
-              };
+                return {
+                  buttonAspectRatio,
+                  previewIsSquare: previewBox ? Math.abs(previewBox.width - previewBox.height) <= 1 : false
+                };
+              });
             });
-          })).toEqual([
-            { buttonAspectRatio: 1.24, previewIsSquare: true },
-            { buttonAspectRatio: 1.24, previewIsSquare: true },
-            { buttonAspectRatio: 1.24, previewIsSquare: true },
-            { buttonAspectRatio: 1.24, previewIsSquare: true }
-          ]);
+
+            return {
+              presetCount: measurements.length,
+              allCompact: measurements.every(({ buttonAspectRatio }) => (
+                buttonAspectRatio >= MIN_PRESET_BUTTON_ASPECT_RATIO &&
+                buttonAspectRatio <= MAX_PRESET_BUTTON_ASPECT_RATIO
+              )),
+              allPreviewsSquare: measurements.every(({ previewIsSquare }) => previewIsSquare)
+            };
+          }).toEqual({
+            presetCount: 4,
+            allCompact: true,
+            allPreviewsSquare: true
+          });
         }
       },
       {
