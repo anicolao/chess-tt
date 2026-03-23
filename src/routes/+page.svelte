@@ -276,6 +276,7 @@
         <Board
           rows={boardRows}
           palette={state.boardThemeSettings.palette}
+          isFlipped={bottomSeatColor === 'b'}
           onPress={(square) => dispatch(gameActions.squarePressed({ square, now: Date.now() }))}
         />
 

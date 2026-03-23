@@ -8,6 +8,7 @@
   export let rows = [];
   export let onPress = () => {};
   export let palette = null;
+  export let isFlipped = false;
 
   $: normalizedPalette = normalizeBoardThemeSettings({ palette }).palette;
   $: boardStyle = [
@@ -16,7 +17,7 @@
   ].filter(Boolean).join('; ');
 </script>
 
-<div class="board-shell" style={boardStyle}>
+<div class="board-shell" style={boardStyle} class:is-flipped={isFlipped}>
   <div class="coordinate-strip files top" aria-hidden="true">
     {#each FILE_COORDINATES as coordinate}
       <span class="coordinate" data-edge="top" data-coordinate={`top-${coordinate}`}>{coordinate}</span>
@@ -70,6 +71,17 @@
       linear-gradient(145deg, rgba(255, 255, 255, 0.09), rgba(8, 14, 21, 0.6));
     box-shadow:
       0 1.1rem 2.3rem rgba(0, 0, 0, 0.28),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+    transition: transform 300ms ease, box-shadow 300ms ease;
+  }
+
+  .board-shell.is-flipped {
+    transform: rotate(180deg);
+    background:
+      radial-gradient(circle at bottom, rgba(143, 188, 255, 0.14), transparent 42%),
+      linear-gradient(325deg, rgba(255, 255, 255, 0.09), rgba(8, 14, 21, 0.6));
+    box-shadow:
+      0 -1.1rem 2.3rem rgba(0, 0, 0, 0.28),
       inset 0 0 0 1px rgba(255, 255, 255, 0.08);
   }
 
