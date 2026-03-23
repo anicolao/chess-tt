@@ -440,10 +440,10 @@
     position: absolute;
     z-index: 3;
     display: grid;
-    gap: 0.65rem;
+    gap: 0.5rem;
     width: min(30rem, calc(100vw - var(--dialog-viewport-padding)));
     max-height: calc(100dvh - var(--dialog-viewport-padding));
-    padding: 0.95rem;
+    padding: 0.85rem;
     border-radius: 1.2rem;
     background: rgba(10, 16, 23, 0.96);
     box-shadow:
@@ -621,24 +621,24 @@
 
   .time-controls {
     display: grid;
-    gap: 0.65rem;
-    padding: 0.6rem;
+    gap: 0.6rem;
+    padding: 0.5rem;
     border-radius: 1rem;
     background: rgba(255, 255, 255, 0.04);
   }
 
   .export-controls {
     display: grid;
-    gap: 0.65rem;
-    padding: 0.55rem;
+    gap: 0.6rem;
+    padding: 0.5rem;
     border-radius: 1rem;
     background: rgba(255, 255, 255, 0.04);
   }
 
   .series-history {
     display: grid;
-    gap: 0.65rem;
-    padding: 0.55rem;
+    gap: 0.6rem;
+    padding: 0.5rem;
     border-radius: 1rem;
     background: rgba(255, 255, 255, 0.04);
   }
@@ -714,8 +714,8 @@
 
   .seat-control {
     display: grid;
-    gap: 0.45rem;
-    padding: 0.6rem;
+    gap: 0.4rem;
+    padding: 0.5rem;
     border: 0;
     border-radius: 0.95rem;
     background: rgba(255, 255, 255, 0.04);
@@ -867,38 +867,30 @@
 
   @media (min-width: 640px) {
     .settings-dialog {
-      width: min(42rem, calc(100vw - var(--dialog-viewport-padding)));
+      width: min(44rem, calc(100vw - var(--dialog-viewport-padding)));
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-areas:
+        "header  header"
+        "message message"
+        "review  review"
+        "theme   time"
+        "export  time"
+        "summary time"
+        "capture history"
+        "control history";
       align-content: start;
     }
 
-    .header,
-    .message,
-    .review-label {
-      grid-column: 1 / -1;
-    }
-
-    .board-theme-section {
-      grid-column: 1;
-    }
-
-    .time-controls {
-      grid-column: 2;
-      align-self: start;
-    }
-
-    .series-history {
-      grid-column: 2;
-      grid-row: span 3;
-      align-self: start;
-    }
-
-    .export-controls,
-    .summary,
-    .captures,
-    .controls-panel {
-      grid-column: 1;
-    }
+    .header { grid-area: header; }
+    .message { grid-area: message; }
+    .review-label { grid-area: review; }
+    .board-theme-section { grid-area: theme; }
+    .time-controls { grid-area: time; align-self: start; }
+    .export-controls { grid-area: export; }
+    .series-history { grid-area: history; align-self: start; }
+    .summary { grid-area: summary; }
+    .captures { grid-area: capture; }
+    .controls-panel { grid-area: control; }
 
     .custom-theme-grid,
     .custom-theme-actions,
