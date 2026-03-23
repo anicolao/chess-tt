@@ -10,9 +10,9 @@
   import { getBoardRows, getCheckedKingSquare } from '$lib/game/chess-game';
   import { appStore, gameActions, gameState } from '$lib/redux/store';
 
-  const playerSettingsAnchors = [
-    { seat: 'top', corner: 'top-left' },
-    { seat: 'bottom', corner: 'bottom-right' }
+  const playerControls = [
+    { seat: 'top', settingsCorner: 'top-left', closeCorner: 'top-right' },
+    { seat: 'bottom', settingsCorner: 'bottom-right', closeCorner: 'bottom-left' }
   ];
   const MOVE_SOUND_ATTACK_SECONDS = 0.008;
   const MOVE_SOUND_DECAY_SECONDS = 0.04;
@@ -126,7 +126,7 @@
   $: topSeatColor = state.timerSettings.seatColors.top;
   $: bottomSeatColor = state.timerSettings.seatColors.bottom;
   $: activeSeat = state.timerState.activeSeat;
-  $: activeSettingsSeat = playerSettingsAnchors.find(({ corner }) => corner === activeSettingsCorner)?.seat ?? 'bottom';
+  $: activeSettingsSeat = playerControls.find(({ settingsCorner }) => settingsCorner === activeSettingsCorner)?.seat ?? 'bottom';
   $: {
     if (isHydrated) {
       // Only announce newly added moves; rewinds like undo reduce history length without replaying sounds.
@@ -263,15 +263,24 @@
 
     <main class="play-area">
       <div class="board-frame">
-        {#each playerSettingsAnchors as control}
+        {#each playerControls as control}
           <button
             type="button"
-            class:top-trigger={control.corner.startsWith('top')}
-            class={`settings-trigger ${control.corner}`}
+            class:top-trigger={control.settingsCorner.startsWith('top')}
+            class={`settings-trigger ${control.settingsCorner}`}
             aria-label={settingsLabel(control.seat)}
-            on:click={() => toggleSettings(control.corner)}
+            on:click={() => toggleSettings(control.settingsCorner)}
           >
             ⚙
+          </button>
+          <button
+            type="button"
+            class:top-trigger={control.closeCorner.startsWith('top')}
+            class={`settings-trigger ${control.closeCorner}`}
+            aria-label={`Exit game for ${control.seat} seat`}
+            on:click={() => window.close()}
+          >
+            ✕
           </button>
         {/each}
 
